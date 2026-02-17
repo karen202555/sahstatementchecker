@@ -7,6 +7,15 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -24,17 +33,21 @@ serve(async (req) => {
       });
     }
 
-    const text = await file.text();
     const fileName = file.name;
     const fileExtension = fileName.split('.').pop()?.toLowerCase();
 
     let transactions: { date: string; description: string; amount: number }[] = [];
 
     if (fileExtension === 'csv') {
+      const text = await file.text();
       transactions = parseCSV(text);
+    } else if (fileExtension === 'pdf') {
+      const buffer = await file.arrayBuffer();
+      const base64 = arrayBufferToBase64(buffer);
+      transactions = await parseWithAI(null, fileName, base64);
     } else {
-      // For PDF and other formats, use AI to extract transactions
-      transactions = await parseWithAI(text, fileName);
+      const text = await file.text();
+      transactions = await parseWithAI(text, fileName, null);
     }
 
     // Store transactions in database
@@ -81,20 +94,15 @@ function parseCSV(text: string): { date: string; description: string; amount: nu
     const cols = line.split(',').map(c => c.trim().replace(/^"|"$/g, ''));
     if (cols.length < 3) continue;
 
-    // Try to detect date, description, amount columns
     let date = '', description = '', amount = 0;
 
     for (const col of cols) {
-      const numVal = parseFloat(col.replace(/[$,]/g, ''));
-      if (!isNaN(numVal) && !date) {
-        // skip, might be date-like number
-      }
       if (/\d{1,4}[-\/]\d{1,2}[-\/]\d{1,4}/.test(col)) {
         date = col;
       } else if (!isNaN(parseFloat(col.replace(/[$,]/g, ''))) && col.replace(/[$,\s]/g, '').match(/^-?\d+\.?\d*$/)) {
         amount = parseFloat(col.replace(/[$,]/g, ''));
-      } else if (col.length > 2 && !date) {
-        description = description ? description : col;
+      } else if (col.length > 2 && !description) {
+        description = col;
       }
     }
 
@@ -113,15 +121,47 @@ function parseCSV(text: string): { date: string; description: string; amount: nu
   return transactions;
 }
 
-async function parseWithAI(text: string, fileName: string): Promise<{ date: string; description: string; amount: number }[]> {
+async function parseWithAI(
+  text: string | null,
+  fileName: string,
+  base64Pdf: string | null
+): Promise<{ date: string; description: string; amount: number }[]> {
   const apiKey = Deno.env.get('LOVABLE_API_KEY');
   if (!apiKey) {
     console.error('No LOVABLE_API_KEY found');
     return [];
   }
 
-  // Truncate text if too long
-  const truncated = text.substring(0, 15000);
+  const systemPrompt = `You are a precise bank statement parser. Extract every individual transaction from the document.
+
+Rules:
+- Return ONLY a JSON array of objects with "date", "description", and "amount" fields.
+- "amount" must be a number: negative for debits/expenses/withdrawals, positive for credits/income/deposits.
+- Extract the EXACT amounts as shown on the statement. Do NOT round or estimate.
+- Preserve the date format exactly as shown on the statement.
+- Do NOT include summary rows like "Opening Balance", "Closing Balance", "Total", or "Balance Carried Forward".
+- Do NOT include interest rate information, account numbers, or headers.
+- No markdown, no explanation, just the JSON array.`;
+
+  let userContent: any;
+
+  if (base64Pdf) {
+    userContent = [
+      {
+        type: 'text',
+        text: `Parse all transactions from this bank statement file "${fileName}". Return only the JSON array.`,
+      },
+      {
+        type: 'image_url',
+        image_url: {
+          url: `data:application/pdf;base64,${base64Pdf}`,
+        },
+      },
+    ];
+  } else {
+    const truncated = (text || '').substring(0, 15000);
+    userContent = `Parse transactions from this bank statement file "${fileName}":\n\n${truncated}`;
+  }
 
   const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
     method: 'POST',
@@ -130,26 +170,25 @@ async function parseWithAI(text: string, fileName: string): Promise<{ date: stri
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'google/gemini-3-flash-preview',
+      model: 'google/gemini-2.5-pro',
       messages: [
-        {
-          role: 'system',
-          content: 'You are a bank statement parser. Extract transactions from the text. Return ONLY a JSON array of objects with "date", "description", and "amount" (number, negative for debits). No markdown, no explanation, just the JSON array.',
-        },
-        {
-          role: 'user',
-          content: `Parse transactions from this bank statement file "${fileName}":\n\n${truncated}`,
-        },
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userContent },
       ],
       temperature: 0.1,
     }),
   });
 
+  if (!response.ok) {
+    const errText = await response.text();
+    console.error('AI gateway error:', response.status, errText);
+    return [];
+  }
+
   const data = await response.json();
   const content = data.choices?.[0]?.message?.content || '[]';
 
   try {
-    // Extract JSON from response
     const jsonMatch = content.match(/\[[\s\S]*\]/);
     if (jsonMatch) {
       return JSON.parse(jsonMatch[0]);
