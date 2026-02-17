@@ -22,7 +22,8 @@ const TransactionsTable = ({ transactions }: TransactionsTableProps) => {
           <TableRow className="bg-muted/50">
             <TableHead className="font-semibold">Date</TableHead>
             <TableHead className="font-semibold">Description</TableHead>
-            <TableHead className="font-semibold text-right">Amount</TableHead>
+            <TableHead className="font-semibold text-right text-primary">Income</TableHead>
+            <TableHead className="font-semibold text-right text-destructive">Expense</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -30,13 +31,11 @@ const TransactionsTable = ({ transactions }: TransactionsTableProps) => {
             <TableRow key={tx.id}>
               <TableCell className="font-mono text-sm">{tx.date}</TableCell>
               <TableCell>{tx.description}</TableCell>
-              <TableCell className="text-right">
-                <Badge
-                  variant={tx.amount < 0 ? "destructive" : "default"}
-                  className="font-mono"
-                >
-                  {tx.amount < 0 ? "-" : "+"}${Math.abs(tx.amount).toFixed(2)}
-                </Badge>
+              <TableCell className="text-right font-mono text-primary">
+                {tx.amount >= 0 ? `$${tx.amount.toFixed(2)}` : ""}
+              </TableCell>
+              <TableCell className="text-right font-mono text-destructive">
+                {tx.amount < 0 ? `$${Math.abs(tx.amount).toFixed(2)}` : ""}
               </TableCell>
             </TableRow>
           ))}
