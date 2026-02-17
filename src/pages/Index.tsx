@@ -1,12 +1,42 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { Sparkles } from "lucide-react";
+import Header from "@/components/Header";
+import FileDropzone from "@/components/FileDropzone";
+import FeatureCards from "@/components/FeatureCards";
 
 const Index = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen bg-background">
+      <Header />
+
+      <main className="container mx-auto px-6 py-16">
+        <div className="flex flex-col items-center gap-10">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-accent px-4 py-1.5">
+            <Sparkles className="h-3.5 w-3.5 text-primary" />
+            <span className="text-xs font-medium text-primary">
+              Smart transaction parsing
+            </span>
+          </div>
+
+          {/* Headline */}
+          <div className="text-center">
+            <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
+              Turn statements into{" "}
+              <span className="text-primary">structured data</span>
+            </h1>
+            <p className="mx-auto mt-4 max-w-lg text-base text-muted-foreground">
+              Upload your bank statements or transaction files and get a clean,
+              organized spreadsheet in seconds.
+            </p>
+          </div>
+
+          {/* Dropzone */}
+          <FileDropzone />
+
+          {/* Features */}
+          <FeatureCards />
+        </div>
+      </main>
     </div>
   );
 };
