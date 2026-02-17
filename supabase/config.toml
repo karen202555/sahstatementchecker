@@ -1,0 +1,4 @@
+project_id = "qxjzkumtxzchladztymv"
+
+[functions.parse-statement]
+verify_jwt = false
