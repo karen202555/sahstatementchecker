@@ -1,55 +1,44 @@
 
-
-# Improve PDF Parsing Accuracy
+# Google Calendar-Style Transaction Calendar
 
 ## Problem
-
-The current PDF parsing has a fundamental flaw: it calls `file.text()` on PDF files, which are binary formats. This produces garbled/unreadable text that the AI model then has to guess from, resulting in hallucinated or inaccurate transaction data.
+1. **Date parsing bug**: Transaction dates are stored as `dd/MM/yy` (e.g., "01/11/25") but the calendar only handles `dd/MM/yyyy`, so no dates match.
+2. **Wrong calendar style**: The current small date-picker calendar requires drilling into dates. You want a full Google Calendar-style grid with transactions visible directly on each day.
 
 ## Solution
+Replace the current `TransactionCalendar` component with a custom-built Google Calendar-style view that supports three view modes:
 
-Send the PDF as a **base64-encoded file** to Gemini's vision/multimodal capability, so the AI can actually "read" the PDF visually rather than receiving corrupted binary-as-text. Also upgrade the model and prompt for better accuracy.
+- **Monthly view** (default): Full grid with 7 columns (Sun-Sat), rows for each week. Transaction descriptions and amounts shown directly in each day cell.
+- **Weekly view**: 7-column grid for a single week, with more vertical space per day to show transaction details.
+- **Daily view**: Single day showing all transactions in a detailed list format.
 
-## Changes
+The calendar will automatically default to the month containing the transaction data.
 
-### 1. Update `supabase/functions/parse-statement/index.ts`
-
-**Read PDF as binary (base64) instead of text:**
-- For PDF files, read the file as an `ArrayBuffer`, convert to base64
-- Send the base64 PDF as an inline data URL in the multimodal message content (using the `image_url` content part with `data:application/pdf;base64,...`)
-- Keep `.text()` for CSV/TXT files which are actually text
-
-**Upgrade the AI model:**
-- Switch from `google/gemini-3-flash-preview` to `google/gemini-2.5-pro` for better accuracy on complex document extraction
-
-**Improve the prompt:**
-- Add explicit instructions to extract exact amounts as shown on the statement
-- Instruct the model to differentiate debits (negative) from credits (positive)
-- Ask it to exclude summary rows like "Opening Balance" and "Closing Balance"
-- Specify expected date format preservation
-
-**Increase truncation limit:**
-- Raise the base64 size limit to handle larger statements (most single-page statements fit well within limits)
-
-### 2. No frontend changes needed
-
-The table and calendar views will automatically display the improved data.
+## What You Will See
+- A toolbar at the top with: Previous/Next navigation arrows, a "Today" button, the current month/week/day label, and Monthly/Weekly/Daily toggle buttons
+- In **Monthly view**: A grid like your screenshot - each day cell shows transaction descriptions truncated if needed, with amounts color-coded (red for charges, green for credits)
+- In **Weekly view**: Same 7-column layout but taller cells, so more transaction detail is visible per day
+- In **Daily view**: A full list of all transactions for that single day with complete descriptions and amounts
+- No clicking required to see transactions - they are always visible in the cells
 
 ## Technical Details
 
-```text
-Current flow (broken for PDFs):
-  PDF binary --> file.text() --> garbled string --> AI guesses --> wrong data
+### 1. Fix date parsing in `TransactionCalendar.tsx`
+Add `dd/MM/yy` format to the parseDate function so 2-digit year dates like "01/11/25" are correctly parsed as November 1, 2025.
 
-New flow:
-  PDF binary --> ArrayBuffer --> base64 --> multimodal AI message --> accurate extraction
-```
+### 2. Rewrite `TransactionCalendar.tsx`
+Replace the entire component with a custom calendar grid:
 
-Key code changes in the edge function:
-- Add `arrayBufferToBase64()` helper
-- Branch logic: if PDF, read as ArrayBuffer and encode base64; otherwise read as text
-- Update `parseWithAI` to accept either base64 data (for PDFs) or plain text (for TXT)
-- Use multimodal content format with `image_url` type for base64 PDFs
-- Switch model to `google/gemini-2.5-pro`
-- Enhanced system prompt with stricter extraction rules
+- **State**: `currentDate` (for navigation), `viewMode` ("month" | "week" | "day")
+- **Auto-detect starting month**: Default `currentDate` to the month of the first transaction
+- **Monthly grid**: Build a 2D array of weeks using `date-fns` helpers (`startOfMonth`, `startOfWeek`, `endOfMonth`, `endOfWeek`, `eachDayOfInterval`). Render as a CSS grid (7 columns). Each cell shows the day number and up to ~3 transaction snippets with a "+N more" indicator if overflow.
+- **Weekly grid**: Same 7-column layout but for a single week, taller cells to show more transactions.
+- **Daily view**: Single column listing all transactions for that day with full detail.
+- **Navigation**: Previous/Next buttons shift by month, week, or day depending on view mode.
+- **Styling**: Charges shown in red, credits in green. Current day highlighted. Days outside current month shown in muted style.
 
+### 3. No changes to `Results.tsx`
+The component interface (`transactions` prop) stays the same, so the results page works without modification.
+
+### Dependencies
+No new packages needed - uses `date-fns` (already installed) and Tailwind CSS for the grid layout.
