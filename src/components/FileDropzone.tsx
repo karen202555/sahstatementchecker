@@ -57,7 +57,7 @@ const FileDropzone = () => {
       navigate(`/results?session=${sessionId}`);
     } catch (error: any) {
       toast({
-        title: "Parsing failed",
+        title: "Processing failed",
         description: error.message || "Something went wrong",
         variant: "destructive",
       });
@@ -118,10 +118,10 @@ const FileDropzone = () => {
             {parsing ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Parsed {parsedCount} of {files.length}...
+                Processing {parsedCount} of {files.length}...
               </>
             ) : (
-              `Parse ${files.length} file${files.length > 1 ? "s" : ""}`
+              `Process ${files.length} file${files.length > 1 ? "s" : ""}`
             )}
           </Button>
         </>
