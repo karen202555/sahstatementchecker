@@ -1,44 +1,56 @@
 
-# Google Calendar-Style Transaction Calendar
+
+# Smart Date Handling for Bank Statements
 
 ## Problem
-1. **Date parsing bug**: Transaction dates are stored as `dd/MM/yy` (e.g., "01/11/25") but the calendar only handles `dd/MM/yyyy`, so no dates match.
-2. **Wrong calendar style**: The current small date-picker calendar requires drilling into dates. You want a full Google Calendar-style grid with transactions visible directly on each day.
+When you uploaded an October statement, dates like `01/10/25` were interpreted as January 10th instead of October 1st. This happens because:
+1. The AI extracts dates in the raw format from the statement (e.g., `01/10/25`)
+2. The calendar then guesses which part is the month vs day -- and guesses wrong for Australian dd/MM format
+3. There is no mechanism to use the statement's own context (header, period, filename) to resolve ambiguity
 
 ## Solution
-Replace the current `TransactionCalendar` component with a custom-built Google Calendar-style view that supports three view modes:
+Fix this at the source -- make the AI return dates in a single unambiguous format (yyyy-MM-dd) by using the statement's own context clues (header month, statement period, etc.) to resolve dd/MM vs MM/dd ambiguity.
 
-- **Monthly view** (default): Full grid with 7 columns (Sun-Sat), rows for each week. Transaction descriptions and amounts shown directly in each day cell.
-- **Weekly view**: 7-column grid for a single week, with more vertical space per day to show transaction details.
-- **Daily view**: Single day showing all transactions in a detailed list format.
+### Changes
 
-The calendar will automatically default to the month containing the transaction data.
+### 1. Update AI System Prompt (Edge Function)
+**File:** `supabase/functions/parse-statement/index.ts`
+
+Update the system prompt to instruct the AI to:
+- Look at the statement header, title, or period to determine the statement month
+- Use that context to correctly interpret ambiguous dates (e.g., if the statement says "October 2025", then `01/10/25` = October 1st)
+- Always return dates in **yyyy-MM-dd** (ISO) format, not the raw format from the statement
+- Default to dd/MM/yy (Australian) when no context clues are available
+
+Updated prompt rules:
+- "IMPORTANT: Look at the statement header, title, or period line to determine what month/year this statement covers."
+- "Use that context to correctly interpret ambiguous date formats (dd/MM vs MM/dd)."
+- "If the statement says 'October 2025' but a date reads '01/10/25', that means 1 October 2025, NOT 10 January."
+- "Default to dd/MM/yy (day/month/year, Australian format) when no context is available."
+- "Return ALL dates in yyyy-MM-dd format (e.g., 2025-10-01)."
+
+### 2. Normalize CSV Dates in the Edge Function
+**File:** `supabase/functions/parse-statement/index.ts`
+
+For CSV parsing (which doesn't go through the AI), add a post-processing step:
+- After parsing all transaction dates, analyze the batch to detect the likely format
+- If all dates have day values <= 12 (ambiguous), check if a consistent month emerges from one interpretation vs the other
+- Apply a `normalizeDate` function that converts raw dates to yyyy-MM-dd using the detected format
+- Default to dd/MM (Australian) for ambiguous cases
+
+### 3. Simplify Calendar Date Parsing
+**File:** `src/components/TransactionCalendar.tsx`
+
+Since dates will now arrive in consistent yyyy-MM-dd format from the backend:
+- Keep the multi-format `parseDate` as a fallback for legacy data
+- But prioritize `yyyy-MM-dd` as the first format tried (move it to top of the list)
+
+### 4. Redeploy Edge Function
+The updated edge function will be automatically deployed.
 
 ## What You Will See
-- A toolbar at the top with: Previous/Next navigation arrows, a "Today" button, the current month/week/day label, and Monthly/Weekly/Daily toggle buttons
-- In **Monthly view**: A grid like your screenshot - each day cell shows transaction descriptions truncated if needed, with amounts color-coded (red for charges, green for credits)
-- In **Weekly view**: Same 7-column layout but taller cells, so more transaction detail is visible per day
-- In **Daily view**: A full list of all transactions for that single day with complete descriptions and amounts
-- No clicking required to see transactions - they are always visible in the cells
+- Upload an Australian bank statement and dates will be correctly placed in the right month
+- The calendar will open to the correct month (e.g., October for an October statement)
+- Mixed-format statements will be handled intelligently using context from the statement header
+- CSV files will also get smart date detection
 
-## Technical Details
-
-### 1. Fix date parsing in `TransactionCalendar.tsx`
-Add `dd/MM/yy` format to the parseDate function so 2-digit year dates like "01/11/25" are correctly parsed as November 1, 2025.
-
-### 2. Rewrite `TransactionCalendar.tsx`
-Replace the entire component with a custom calendar grid:
-
-- **State**: `currentDate` (for navigation), `viewMode` ("month" | "week" | "day")
-- **Auto-detect starting month**: Default `currentDate` to the month of the first transaction
-- **Monthly grid**: Build a 2D array of weeks using `date-fns` helpers (`startOfMonth`, `startOfWeek`, `endOfMonth`, `endOfWeek`, `eachDayOfInterval`). Render as a CSS grid (7 columns). Each cell shows the day number and up to ~3 transaction snippets with a "+N more" indicator if overflow.
-- **Weekly grid**: Same 7-column layout but for a single week, taller cells to show more transactions.
-- **Daily view**: Single column listing all transactions for that day with full detail.
-- **Navigation**: Previous/Next buttons shift by month, week, or day depending on view mode.
-- **Styling**: Charges shown in red, credits in green. Current day highlighted. Days outside current month shown in muted style.
-
-### 3. No changes to `Results.tsx`
-The component interface (`transactions` prop) stays the same, so the results page works without modification.
-
-### Dependencies
-No new packages needed - uses `date-fns` (already installed) and Tailwind CSS for the grid layout.
