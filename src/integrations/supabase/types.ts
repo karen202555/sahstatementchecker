@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       transactions: {
         Row: {
           amount: number
@@ -23,6 +44,7 @@ export type Database = {
           file_name: string | null
           id: string
           session_id: string
+          user_id: string | null
         }
         Insert: {
           amount: number
@@ -32,6 +54,7 @@ export type Database = {
           file_name?: string | null
           id?: string
           session_id: string
+          user_id?: string | null
         }
         Update: {
           amount?: number
@@ -41,6 +64,7 @@ export type Database = {
           file_name?: string | null
           id?: string
           session_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }

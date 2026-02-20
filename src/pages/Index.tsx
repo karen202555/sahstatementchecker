@@ -2,8 +2,12 @@
 import Header from "@/components/Header";
 import FileDropzone from "@/components/FileDropzone";
 import FeatureCards from "@/components/FeatureCards";
+import StatementHistory from "@/components/StatementHistory";
+import { useAuth } from "@/hooks/use-auth";
 
 const Index = () => {
+  const { user } = useAuth();
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -24,12 +28,15 @@ const Index = () => {
           {/* Dropzone */}
           <FileDropzone />
 
+          {/* Statement history for logged-in users */}
+          {user && <StatementHistory />}
+
           {/* Features */}
           <FeatureCards />
         </div>
       </main>
-    </div>);
-
+    </div>
+  );
 };
 
 export default Index;
