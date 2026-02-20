@@ -68,15 +68,15 @@ const FileDropzone = () => {
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        className={`cursor-pointer rounded-2xl border-2 border-dashed p-6 text-center transition-all duration-200 ${
+        className={`cursor-pointer rounded-2xl border-2 border-dashed p-4 text-center transition-all duration-200 ${
           isDragging
             ? "border-primary bg-accent"
             : "border-border bg-card hover:border-primary/40 hover:bg-accent/50"
         }`}
       >
-        <div className="flex flex-col items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-muted">
-            <Upload className="h-6 w-6 text-muted-foreground" />
+        <div className="flex flex-col items-center gap-2">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted">
+            <Upload className="h-5 w-5 text-muted-foreground" />
           </div>
           <div>
             <p className="text-base font-semibold text-foreground">
