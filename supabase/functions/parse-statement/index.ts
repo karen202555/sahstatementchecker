@@ -7,16 +7,15 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const MAX_CSV_LINES = 10_000;
-const MAX_CSV_LENGTH = 1_000_000; // 1MB text
+const MAX_CSV_LENGTH = 1_000_000;
 const MAX_DESCRIPTION_LENGTH = 500;
 const MAX_AMOUNT = 1_000_000_000;
 
-// Simple in-memory rate limiter (per session, resets on cold start)
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-const RATE_LIMIT = 20; // requests per window
-const RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const RATE_LIMIT = 20;
+const RATE_WINDOW_MS = 60 * 60 * 1000;
 
 function checkRateLimit(key: string): boolean {
   const now = Date.now();
@@ -39,15 +38,29 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
 }
 
 function sanitizeDescription(desc: string): string {
-  // Prevent CSV formula injection
   let sanitized = desc.replace(/^[=+@\-]/, "'$&");
-  // Limit length
   return sanitized.substring(0, MAX_DESCRIPTION_LENGTH);
 }
 
 function validateSessionId(sessionId: string): boolean {
-  // Must be a valid UUID v4 format
   return /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(sessionId);
+}
+
+/** Extract user_id from Bearer JWT without verifying (service role validates via RLS) */
+async function getUserIdFromJwt(authHeader: string | null): Promise<string | null> {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
+  const token = authHeader.slice(7);
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const anonClient = createClient(supabaseUrl, supabaseKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: { user } } = await anonClient.auth.getUser();
+    return user?.id ?? null;
+  } catch {
+    return null;
+  }
 }
 
 serve(async (req) => {
@@ -56,6 +69,9 @@ serve(async (req) => {
   }
 
   try {
+    const authHeader = req.headers.get('authorization');
+    const userId = await getUserIdFromJwt(authHeader);
+
     const formData = await req.formData();
     const file = formData.get('file') as File;
     const sessionId = formData.get('session_id') as string;
@@ -67,7 +83,6 @@ serve(async (req) => {
       });
     }
 
-    // Validate session_id format
     if (!validateSessionId(sessionId)) {
       return new Response(JSON.stringify({ error: 'Invalid session_id format' }), {
         status: 400,
@@ -75,7 +90,6 @@ serve(async (req) => {
       });
     }
 
-    // Rate limit per session
     if (!checkRateLimit(sessionId)) {
       return new Response(JSON.stringify({ error: 'Rate limit exceeded. Try again later.' }), {
         status: 429,
@@ -83,7 +97,6 @@ serve(async (req) => {
       });
     }
 
-    // File size check
     if (file.size > MAX_FILE_SIZE) {
       return new Response(JSON.stringify({ error: 'File too large. Maximum 5MB.' }), {
         status: 400,
@@ -94,7 +107,6 @@ serve(async (req) => {
     const fileName = file.name;
     const fileExtension = fileName.split('.').pop()?.toLowerCase();
 
-    // Validate file extension
     const allowedExtensions = ['csv', 'pdf', 'txt'];
     if (!fileExtension || !allowedExtensions.includes(fileExtension)) {
       return new Response(JSON.stringify({ error: 'Unsupported file type. Use CSV, PDF, or TXT.' }), {
@@ -118,14 +130,12 @@ serve(async (req) => {
       transactions = await parseWithAI(text, fileName, null);
     }
 
-    // Sanitize all transaction descriptions
     transactions = transactions.map(t => ({
       ...t,
       description: sanitizeDescription(t.description || 'Unknown'),
       amount: Math.abs(t.amount) > MAX_AMOUNT ? 0 : t.amount,
     }));
 
-    // Store transactions in database
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -137,6 +147,7 @@ serve(async (req) => {
         description: t.description,
         amount: t.amount,
         file_name: fileName,
+        user_id: userId ?? null,
       }));
 
       const { error } = await supabase.from('transactions').insert(rows);
@@ -156,48 +167,36 @@ serve(async (req) => {
 });
 
 function normalizeDateStr(dateStr: string, useDDMM: boolean): string {
-  // Already yyyy-MM-dd
   if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
-
   const sep = dateStr.includes('/') ? '/' : '-';
   const parts = dateStr.split(sep);
   if (parts.length !== 3) return dateStr;
-
   let day: number, month: number, year: number;
-
   if (parts[0].length === 4) {
-    // yyyy-MM-dd or yyyy/MM/dd
     year = parseInt(parts[0]); month = parseInt(parts[1]); day = parseInt(parts[2]);
   } else if (useDDMM) {
     day = parseInt(parts[0]); month = parseInt(parts[1]); year = parseInt(parts[2]);
   } else {
     month = parseInt(parts[0]); day = parseInt(parts[1]); year = parseInt(parts[2]);
   }
-
   if (year < 100) year += 2000;
   return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
 function detectDateFormat(transactions: { date: string }[]): boolean {
-  // Returns true if dd/MM, false if MM/dd
   let needsDDMM = false;
   let needsMMDD = false;
-
   for (const tx of transactions) {
     const sep = tx.date.includes('/') ? '/' : '-';
     const parts = tx.date.split(sep);
     if (parts.length !== 3 || parts[0].length === 4) continue;
-
     const a = parseInt(parts[0]);
     const b = parseInt(parts[1]);
-
-    if (a > 12 && b <= 12) needsDDMM = true;  // first part must be day
-    if (b > 12 && a <= 12) needsMMDD = true;  // second part must be day
+    if (a > 12 && b <= 12) needsDDMM = true;
+    if (b > 12 && a <= 12) needsMMDD = true;
   }
-
   if (needsDDMM && !needsMMDD) return true;
   if (needsMMDD && !needsDDMM) return false;
-  // Ambiguous — default to Australian dd/MM
   return true;
 }
 
@@ -205,35 +204,22 @@ function normalizeCsvDates(
   transactions: { date: string; description: string; amount: number }[]
 ): { date: string; description: string; amount: number }[] {
   const useDDMM = detectDateFormat(transactions);
-  return transactions.map(tx => ({
-    ...tx,
-    date: normalizeDateStr(tx.date, useDDMM),
-  }));
+  return transactions.map(tx => ({ ...tx, date: normalizeDateStr(tx.date, useDDMM) }));
 }
 
 function parseCSV(text: string): { date: string; description: string; amount: number }[] {
-  if (text.length > MAX_CSV_LENGTH) {
-    throw new Error('CSV file too large');
-  }
-
+  if (text.length > MAX_CSV_LENGTH) throw new Error('CSV file too large');
   const lines = text.trim().split('\n');
   if (lines.length < 2) return [];
-  if (lines.length > MAX_CSV_LINES) {
-    throw new Error('Too many lines in CSV');
-  }
-
+  if (lines.length > MAX_CSV_LINES) throw new Error('Too many lines in CSV');
   const header = lines[0].toLowerCase();
   const hasHeader = header.includes('date') || header.includes('amount') || header.includes('description');
   const dataLines = hasHeader ? lines.slice(1) : lines;
-
   const transactions: { date: string; description: string; amount: number }[] = [];
-
   for (const line of dataLines) {
     const cols = line.split(',').map(c => c.trim().replace(/^"|"$/g, ''));
     if (cols.length < 3) continue;
-
     let date = '', description = '', amount = 0;
-
     for (const col of cols) {
       if (/\d{1,4}[-\/]\d{1,2}[-\/]\d{1,4}/.test(col)) {
         date = col;
@@ -243,19 +229,14 @@ function parseCSV(text: string): { date: string; description: string; amount: nu
         description = col;
       }
     }
-
     if (!description) description = cols[1] || 'Unknown';
     if (!date) date = cols[0] || 'Unknown';
     if (amount === 0) {
       const lastNum = parseFloat(cols[cols.length - 1]?.replace(/[$,]/g, '') || '0');
       if (!isNaN(lastNum)) amount = lastNum;
     }
-
-    if (date && description) {
-      transactions.push({ date, description, amount });
-    }
+    if (date && description) transactions.push({ date, description, amount });
   }
-
   return transactions;
 }
 
@@ -265,10 +246,7 @@ async function parseWithAI(
   base64Pdf: string | null
 ): Promise<{ date: string; description: string; amount: number }[]> {
   const apiKey = Deno.env.get('LOVABLE_API_KEY');
-  if (!apiKey) {
-    console.error('No LOVABLE_API_KEY found');
-    return [];
-  }
+  if (!apiKey) { console.error('No LOVABLE_API_KEY found'); return []; }
 
   const systemPrompt = `You are a precise bank statement parser. Extract every individual transaction from the document.
 
@@ -286,19 +264,10 @@ Rules:
 - No markdown, no explanation, just the JSON array.`;
 
   let userContent: any;
-
   if (base64Pdf) {
     userContent = [
-      {
-        type: 'text',
-        text: `Parse all transactions from this bank statement file "${fileName}". Return only the JSON array.`,
-      },
-      {
-        type: 'image_url',
-        image_url: {
-          url: `data:application/pdf;base64,${base64Pdf}`,
-        },
-      },
+      { type: 'text', text: `Parse all transactions from this bank statement file "${fileName}". Return only the JSON array.` },
+      { type: 'image_url', image_url: { url: `data:application/pdf;base64,${base64Pdf}` } },
     ];
   } else {
     const truncated = (text || '').substring(0, 15000);
@@ -307,16 +276,10 @@ Rules:
 
   const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
     method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
+    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: 'google/gemini-2.5-flash',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userContent },
-      ],
+      messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userContent }],
       temperature: 0.1,
     }),
   });
@@ -329,12 +292,9 @@ Rules:
 
   const data = await response.json();
   const content = data.choices?.[0]?.message?.content || '[]';
-
   try {
     const jsonMatch = content.match(/\[[\s\S]*\]/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
-    }
+    if (jsonMatch) return JSON.parse(jsonMatch[0]);
     return JSON.parse(content);
   } catch {
     console.error('Failed to parse AI response:', content);
