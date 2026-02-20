@@ -20,15 +20,15 @@ const Index = () => {
 
           {/* Headline */}
           <div className="text-center">
-            <p className="text-2xl font-bold text-primary sm:text-6xl">make sense of your home care statements
+            <p className="text-2xl font-bold text-primary sm:text-6xl">make sense of your support at home statements ..
 
             </p>
             <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-4xl">
               Turn statements into{" "}
               <span className="text-primary">a calendar view</span>
             </h1>
-            <p className="mx-auto mt-4 max-w-lg text-base text-muted-foreground">Upload your provider home care statements and see the transactions in a clear calendar view. Dont get overcharged! 
-
+            <p className="mx-auto mt-4 max-w-lg text-base text-muted-foreground">Upload your provider statements and view the transactions clearly in a calendar view. 
+Don't get overcharged! 
 
             </p>
           </div>
