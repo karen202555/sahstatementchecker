@@ -10,6 +10,7 @@ const FileDropzone = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
   const [parsing, setParsing] = useState(false);
+  const [parsedCount, setParsedCount] = useState(0);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -43,12 +44,16 @@ const FileDropzone = () => {
   const handleParse = async () => {
     if (files.length === 0) return;
     setParsing(true);
+    setParsedCount(0);
     const sessionId = generateSessionId();
 
     try {
-      for (const file of files) {
-        await uploadAndParse(file, sessionId);
-      }
+      await Promise.all(
+        files.map(async (file) => {
+          await uploadAndParse(file, sessionId);
+          setParsedCount((prev) => prev + 1);
+        })
+      );
       navigate(`/results?session=${sessionId}`);
     } catch (error: any) {
       toast({
@@ -113,7 +118,7 @@ const FileDropzone = () => {
             {parsing ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Parsing...
+                Parsed {parsedCount} of {files.length}...
               </>
             ) : (
               `Parse ${files.length} file${files.length > 1 ? "s" : ""}`
