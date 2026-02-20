@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Results from "./pages/Results";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,8 @@ function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
 const AppRoutes = () => (
   <Routes>
     <Route path="/auth" element={<PublicOnlyRoute><Auth /></PublicOnlyRoute>} />
+    {/* Reset password must be public — user arrives from email link, not logged in */}
+    <Route path="/reset-password" element={<ResetPassword />} />
     <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
     {/* Results is accessible without auth (shared links) */}
     <Route path="/results" element={<Results />} />
