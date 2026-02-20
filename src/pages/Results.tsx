@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Table as TableIcon, CalendarDays, Download } from "lucide-react";
+import { ArrowLeft, Table as TableIcon, CalendarDays, Download, Printer } from "lucide-react";
 import Header from "@/components/Header";
 import TransactionsTable from "@/components/TransactionsTable";
 import TransactionCalendar from "@/components/TransactionCalendar";
@@ -53,10 +53,16 @@ const Results = () => {
               {transactions.length} transaction{transactions.length !== 1 ? "s" : ""} found
             </span>
             {transactions.length > 0 && (
-              <Button variant="outline" size="sm" className="gap-2" onClick={() => exportToExcel(transactions)}>
-                <Download className="h-4 w-4" />
-                Export to Excel
-              </Button>
+              <>
+                <Button variant="outline" size="sm" className="gap-2" onClick={() => window.print()}>
+                  <Printer className="h-4 w-4" />
+                  Print
+                </Button>
+                <Button variant="outline" size="sm" className="gap-2" onClick={() => exportToExcel(transactions)}>
+                  <Download className="h-4 w-4" />
+                  Export to Excel
+                </Button>
+              </>
             )}
           </div>
         </div>
