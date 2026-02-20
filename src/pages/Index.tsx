@@ -22,11 +22,11 @@ const Index = () => {
           <div className="text-center">
             <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
               Turn statements into{" "}
-              <span className="text-primary">structured data</span>
+              <span className="text-primary">a calendar view</span>
             </h1>
-            <p className="mx-auto mt-4 max-w-lg text-base text-muted-foreground">
-              Upload your bank statements or transaction files and get a clean,
-              organized spreadsheet in seconds.
+            <p className="mx-auto mt-4 max-w-lg text-base text-muted-foreground">Upload your provider home care statements and see the transactions in a clear calendar view. Make sure you are being charged for only what you received. 
+
+
             </p>
           </div>
 
@@ -37,8 +37,8 @@ const Index = () => {
           <FeatureCards />
         </div>
       </main>
-    </div>
-  );
+    </div>);
+
 };
 
 export default Index;
