@@ -11,12 +11,12 @@ const Index = () => {
       <main className="container mx-auto px-6 py-16">
         <div className="flex flex-col items-center gap-10">
           {/* Badge */}
-          
-
-
-
-
-
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-accent px-4 py-1.5">
+            <Sparkles className="h-3.5 w-3.5 text-primary" />
+            <span className="text-xs font-medium text-primary">
+              Smart transaction parsing
+            </span>
+          </div>
 
           {/* Headline */}
           <div className="text-center">
