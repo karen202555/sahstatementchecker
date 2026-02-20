@@ -7,6 +7,28 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_CSV_LINES = 10_000;
+const MAX_CSV_LENGTH = 1_000_000; // 1MB text
+const MAX_DESCRIPTION_LENGTH = 500;
+const MAX_AMOUNT = 1_000_000_000;
+
+// Simple in-memory rate limiter (per session, resets on cold start)
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT = 20; // requests per window
+const RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+
+function checkRateLimit(key: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(key);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(key, { count: 1, resetAt: now + RATE_WINDOW_MS });
+    return true;
+  }
+  entry.count++;
+  return entry.count <= RATE_LIMIT;
+}
+
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer);
   let binary = '';
@@ -14,6 +36,18 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
     binary += String.fromCharCode(bytes[i]);
   }
   return btoa(binary);
+}
+
+function sanitizeDescription(desc: string): string {
+  // Prevent CSV formula injection
+  let sanitized = desc.replace(/^[=+@\-]/, "'$&");
+  // Limit length
+  return sanitized.substring(0, MAX_DESCRIPTION_LENGTH);
+}
+
+function validateSessionId(sessionId: string): boolean {
+  // Must be a valid UUID v4 format
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(sessionId);
 }
 
 serve(async (req) => {
@@ -33,8 +67,41 @@ serve(async (req) => {
       });
     }
 
+    // Validate session_id format
+    if (!validateSessionId(sessionId)) {
+      return new Response(JSON.stringify({ error: 'Invalid session_id format' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Rate limit per session
+    if (!checkRateLimit(sessionId)) {
+      return new Response(JSON.stringify({ error: 'Rate limit exceeded. Try again later.' }), {
+        status: 429,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // File size check
+    if (file.size > MAX_FILE_SIZE) {
+      return new Response(JSON.stringify({ error: 'File too large. Maximum 5MB.' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const fileName = file.name;
     const fileExtension = fileName.split('.').pop()?.toLowerCase();
+
+    // Validate file extension
+    const allowedExtensions = ['csv', 'pdf', 'txt'];
+    if (!fileExtension || !allowedExtensions.includes(fileExtension)) {
+      return new Response(JSON.stringify({ error: 'Unsupported file type. Use CSV, PDF, or TXT.' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     let transactions: { date: string; description: string; amount: number }[] = [];
 
@@ -49,6 +116,13 @@ serve(async (req) => {
       const text = await file.text();
       transactions = await parseWithAI(text, fileName, null);
     }
+
+    // Sanitize all transaction descriptions
+    transactions = transactions.map(t => ({
+      ...t,
+      description: sanitizeDescription(t.description || 'Unknown'),
+      amount: Math.abs(t.amount) > MAX_AMOUNT ? 0 : t.amount,
+    }));
 
     // Store transactions in database
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -73,7 +147,7 @@ serve(async (req) => {
     });
   } catch (error) {
     console.error('Parse error:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: 'An error occurred while processing your file.' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
@@ -81,8 +155,15 @@ serve(async (req) => {
 });
 
 function parseCSV(text: string): { date: string; description: string; amount: number }[] {
+  if (text.length > MAX_CSV_LENGTH) {
+    throw new Error('CSV file too large');
+  }
+
   const lines = text.trim().split('\n');
   if (lines.length < 2) return [];
+  if (lines.length > MAX_CSV_LINES) {
+    throw new Error('Too many lines in CSV');
+  }
 
   const header = lines[0].toLowerCase();
   const hasHeader = header.includes('date') || header.includes('amount') || header.includes('description');
