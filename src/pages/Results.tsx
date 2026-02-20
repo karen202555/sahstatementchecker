@@ -1,12 +1,28 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Table as TableIcon, CalendarDays } from "lucide-react";
+import { ArrowLeft, Table as TableIcon, CalendarDays, Download } from "lucide-react";
 import Header from "@/components/Header";
 import TransactionsTable from "@/components/TransactionsTable";
 import TransactionCalendar from "@/components/TransactionCalendar";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { getTransactions, type Transaction } from "@/lib/transactions";
+
+function exportToExcel(transactions: Transaction[]) {
+  const header = "Date\tDescription\tAmount";
+  const rows = transactions.map(
+    (tx) => `${tx.date}\t${tx.description}\t${tx.amount.toFixed(2)}`
+  );
+  const tsv = [header, ...rows].join("\n");
+  const BOM = "\uFEFF";
+  const blob = new Blob([BOM + tsv], { type: "application/vnd.ms-excel;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "transactions.xls";
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 const Results = () => {
   const [searchParams] = useSearchParams();
@@ -32,9 +48,17 @@ const Results = () => {
             <ArrowLeft className="h-4 w-4" />
             Back to Home
           </Button>
-          <span className="text-sm text-muted-foreground">
-            {transactions.length} transaction{transactions.length !== 1 ? "s" : ""} found
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-muted-foreground">
+              {transactions.length} transaction{transactions.length !== 1 ? "s" : ""} found
+            </span>
+            {transactions.length > 0 && (
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => exportToExcel(transactions)}>
+                <Download className="h-4 w-4" />
+                Export to Excel
+              </Button>
+            )}
+          </div>
         </div>
 
         {loading ? (
@@ -42,7 +66,7 @@ const Results = () => {
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
           </div>
         ) : (
-          <Tabs defaultValue="table">
+          <Tabs defaultValue="calendar">
             <TabsList className="mb-6">
               <TabsTrigger value="table" className="gap-2">
                 <TableIcon className="h-4 w-4" />
