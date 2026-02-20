@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Table as TableIcon, CalendarDays, Download, Printer, PieChart, ShieldAlert, Share2 } from "lucide-react";
+import { ArrowLeft, Table as TableIcon, CalendarDays, Download, Printer, PieChart, ShieldAlert, Share2, FileDown } from "lucide-react";
 import Header from "@/components/Header";
 import TransactionsTable from "@/components/TransactionsTable";
 import TransactionCalendar from "@/components/TransactionCalendar";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { getTransactions, type Transaction } from "@/lib/transactions";
 import { toast } from "@/hooks/use-toast";
+import { generatePdfReport } from "@/lib/pdf-report";
 
 function exportToExcel(transactions: Transaction[]) {
   const header = "Date\tDescription\tAmount";
@@ -75,7 +76,11 @@ const Results = () => {
                 </Button>
                 <Button variant="outline" size="sm" className="gap-2" onClick={() => exportToExcel(transactions)}>
                   <Download className="h-4 w-4" />
-                  Export to Excel
+                  Excel
+                </Button>
+                <Button variant="outline" size="sm" className="gap-2" onClick={() => generatePdfReport(transactions)}>
+                  <FileDown className="h-4 w-4" />
+                  PDF Report
                 </Button>
               </>
             )}
