@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Table as TableIcon, CalendarDays, Download, Printer } from "lucide-react";
+import { ArrowLeft, Table as TableIcon, CalendarDays, Download, Printer, PieChart, ShieldAlert } from "lucide-react";
 import Header from "@/components/Header";
 import TransactionsTable from "@/components/TransactionsTable";
 import TransactionCalendar from "@/components/TransactionCalendar";
+import SpendingSummary from "@/components/SpendingSummary";
+import OverchargeAlerts from "@/components/OverchargeAlerts";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { getTransactions, type Transaction } from "@/lib/transactions";
@@ -82,12 +84,26 @@ const Results = () => {
                 <CalendarDays className="h-4 w-4" />
                 Calendar
               </TabsTrigger>
+              <TabsTrigger value="summary" className="gap-2">
+                <PieChart className="h-4 w-4" />
+                Summary
+              </TabsTrigger>
+              <TabsTrigger value="alerts" className="gap-2">
+                <ShieldAlert className="h-4 w-4" />
+                Alerts
+              </TabsTrigger>
             </TabsList>
             <TabsContent value="table">
               <TransactionsTable transactions={transactions} />
             </TabsContent>
             <TabsContent value="calendar">
               <TransactionCalendar transactions={transactions} />
+            </TabsContent>
+            <TabsContent value="summary">
+              <SpendingSummary transactions={transactions} />
+            </TabsContent>
+            <TabsContent value="alerts">
+              <OverchargeAlerts transactions={transactions} />
             </TabsContent>
           </Tabs>
         )}
