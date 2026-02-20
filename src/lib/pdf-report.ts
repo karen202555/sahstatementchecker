@@ -1,5 +1,5 @@
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 import type { Transaction } from "./transactions";
 import { getCategorySummary } from "./categorize";
 import { detectOvercharges } from "./overcharge-detector";
@@ -40,7 +40,7 @@ export function generatePdfReport(transactions: Transaction[]) {
   doc.text("Spending by Category", 14, y);
   y += 6;
 
-  (doc as any).autoTable({
+  autoTable(doc, {
     startY: y,
     head: [["Category", "Transactions", "Total", "% of Spend"]],
     body: categories.map((c) => [
@@ -66,11 +66,11 @@ export function generatePdfReport(transactions: Transaction[]) {
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(180, 30, 30);
-    doc.text(`⚠ ${alerts.length} Potential Issue${alerts.length !== 1 ? "s" : ""} Detected`, 14, y);
+    doc.text(`${alerts.length} Potential Issue${alerts.length !== 1 ? "s" : ""} Detected`, 14, y);
     doc.setTextColor(0);
     y += 6;
 
-    (doc as any).autoTable({
+    autoTable(doc, {
       startY: y,
       head: [["Severity", "Type", "Issue", "Details"]],
       body: alerts.map((a) => [
@@ -110,7 +110,7 @@ export function generatePdfReport(transactions: Transaction[]) {
   doc.text("All Transactions", 14, y);
   y += 6;
 
-  (doc as any).autoTable({
+  autoTable(doc, {
     startY: y,
     head: [["Date", "Description", "Amount"]],
     body: transactions.map((tx) => [
