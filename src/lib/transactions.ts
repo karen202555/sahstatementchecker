@@ -33,14 +33,34 @@ export async function uploadAndParse(file: File, sessionId: string): Promise<Tra
 }
 
 export async function getTransactions(sessionId: string): Promise<Transaction[]> {
-  const { data, error } = await supabase
-    .from('transactions')
-    .select('*')
-    .eq('session_id', sessionId)
-    .order('date', { ascending: true });
+  // Try authenticated read first (RLS allows owner access)
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (error) throw error;
-  return (data as Transaction[]) || [];
+  if (user) {
+    const { data, error } = await supabase
+      .from('transactions')
+      .select('*')
+      .eq('session_id', sessionId)
+      .order('date', { ascending: true });
+
+    if (!error && data && data.length > 0) {
+      return data as Transaction[];
+    }
+  }
+
+  // Fall back to edge function for shared/public access (no direct DB access for anon)
+  const res = await fetch(
+    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-shared-transactions?session_id=${encodeURIComponent(sessionId)}`,
+    {
+      headers: {
+        apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+      },
+    }
+  );
+
+  if (!res.ok) throw new Error('Failed to load shared transactions');
+  const json = await res.json();
+  return (json.transactions as Transaction[]) || [];
 }
 
 export async function getUserStatementFiles(): Promise<StatementFile[]> {
