@@ -3,18 +3,18 @@ import { FileText, Sparkles, Download } from "lucide-react";
 const features = [
   {
     icon: FileText,
-    title: "PDF Parsing",
-    description: "Extracts text from all pages of PDF statements",
+    title: "Smart Processing",
+    description: "Upload PDFs, CSVs or TXT — transactions extracted instantly",
   },
   {
     icon: Sparkles,
-    title: "Smart Detection",
-    description: "Auto-detects dates, amounts & filters non-transactions",
+    title: "Overcharge Detector",
+    description: "Flags duplicates, unusual charges & fee changes automatically",
   },
   {
     icon: Download,
-    title: "CSV Export",
-    description: "Download ready for Google Sheets",
+    title: "Export & Share",
+    description: "Download to Excel or print your results",
   },
 ];
 
