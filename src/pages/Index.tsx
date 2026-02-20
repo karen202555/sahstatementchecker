@@ -20,6 +20,9 @@ const Index = () => {
 
           {/* Headline */}
           <div className="text-center">
+            <p className="text-lg text-muted-foreground">
+              Having trouble making sense of your home care statements?
+            </p>
             <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
               Turn statements into{" "}
               <span className="text-primary">a calendar view</span>
