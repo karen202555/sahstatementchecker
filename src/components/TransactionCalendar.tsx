@@ -31,10 +31,10 @@ type ViewMode = "month" | "week" | "day";
 
 function parseDate(dateStr: string): Date | null {
   const formats = [
-    "dd/MM/yy",
     "yyyy-MM-dd",
-    "MM/dd/yyyy",
+    "dd/MM/yy",
     "dd/MM/yyyy",
+    "MM/dd/yyyy",
     "M/d/yyyy",
     "MM-dd-yyyy",
   ];
