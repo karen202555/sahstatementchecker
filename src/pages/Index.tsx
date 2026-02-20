@@ -20,7 +20,7 @@ const Index = () => {
 
           {/* Headline */}
           <div className="text-center">
-            <p className="text-2xl font-semibold sm:text-3xl text-primary">
+            <p className="text-2xl text-primary font-bold sm:text-5xl">
               Having trouble making sense of your home care statements?
             </p>
             <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
