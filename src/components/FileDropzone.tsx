@@ -68,7 +68,7 @@ const FileDropzone = () => {
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        className={`cursor-pointer rounded-2xl border-2 border-dashed p-12 text-center transition-all duration-200 ${
+        className={`cursor-pointer rounded-2xl border-2 border-dashed p-6 text-center transition-all duration-200 ${
           isDragging
             ? "border-primary bg-accent"
             : "border-border bg-card hover:border-primary/40 hover:bg-accent/50"
