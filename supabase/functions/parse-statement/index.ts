@@ -108,6 +108,7 @@ serve(async (req) => {
     if (fileExtension === 'csv') {
       const text = await file.text();
       transactions = parseCSV(text);
+      transactions = normalizeCsvDates(transactions);
     } else if (fileExtension === 'pdf') {
       const buffer = await file.arrayBuffer();
       const base64 = arrayBufferToBase64(buffer);
@@ -153,6 +154,62 @@ serve(async (req) => {
     });
   }
 });
+
+function normalizeDateStr(dateStr: string, useDDMM: boolean): string {
+  // Already yyyy-MM-dd
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+
+  const sep = dateStr.includes('/') ? '/' : '-';
+  const parts = dateStr.split(sep);
+  if (parts.length !== 3) return dateStr;
+
+  let day: number, month: number, year: number;
+
+  if (parts[0].length === 4) {
+    // yyyy-MM-dd or yyyy/MM/dd
+    year = parseInt(parts[0]); month = parseInt(parts[1]); day = parseInt(parts[2]);
+  } else if (useDDMM) {
+    day = parseInt(parts[0]); month = parseInt(parts[1]); year = parseInt(parts[2]);
+  } else {
+    month = parseInt(parts[0]); day = parseInt(parts[1]); year = parseInt(parts[2]);
+  }
+
+  if (year < 100) year += 2000;
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+function detectDateFormat(transactions: { date: string }[]): boolean {
+  // Returns true if dd/MM, false if MM/dd
+  let needsDDMM = false;
+  let needsMMDD = false;
+
+  for (const tx of transactions) {
+    const sep = tx.date.includes('/') ? '/' : '-';
+    const parts = tx.date.split(sep);
+    if (parts.length !== 3 || parts[0].length === 4) continue;
+
+    const a = parseInt(parts[0]);
+    const b = parseInt(parts[1]);
+
+    if (a > 12 && b <= 12) needsDDMM = true;  // first part must be day
+    if (b > 12 && a <= 12) needsMMDD = true;  // second part must be day
+  }
+
+  if (needsDDMM && !needsMMDD) return true;
+  if (needsMMDD && !needsDDMM) return false;
+  // Ambiguous — default to Australian dd/MM
+  return true;
+}
+
+function normalizeCsvDates(
+  transactions: { date: string; description: string; amount: number }[]
+): { date: string; description: string; amount: number }[] {
+  const useDDMM = detectDateFormat(transactions);
+  return transactions.map(tx => ({
+    ...tx,
+    date: normalizeDateStr(tx.date, useDDMM),
+  }));
+}
 
 function parseCSV(text: string): { date: string; description: string; amount: number }[] {
   if (text.length > MAX_CSV_LENGTH) {
@@ -219,7 +276,11 @@ Rules:
 - Return ONLY a JSON array of objects with "date", "description", and "amount" fields.
 - "amount" must be a number: negative for debits/expenses/withdrawals, positive for credits/income/deposits.
 - Extract the EXACT amounts as shown on the statement. Do NOT round or estimate.
-- Preserve the date format exactly as shown on the statement.
+- IMPORTANT: Look at the statement header, title, or period line to determine what month/year this statement covers.
+- Use that context to correctly interpret ambiguous date formats (dd/MM vs MM/dd).
+- If the statement says "October 2025" but a date reads "01/10/25", that means 1 October 2025, NOT 10 January.
+- Default to dd/MM/yy (day/month/year, Australian format) when no context is available.
+- Return ALL dates in yyyy-MM-dd format (e.g., 2025-10-01). Do NOT preserve the original date format.
 - Do NOT include summary rows like "Opening Balance", "Closing Balance", "Total", or "Balance Carried Forward".
 - Do NOT include interest rate information, account numbers, or headers.
 - No markdown, no explanation, just the JSON array.`;
