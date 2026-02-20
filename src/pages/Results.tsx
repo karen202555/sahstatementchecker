@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Table as TableIcon, CalendarDays, Download, Printer, PieChart, ShieldAlert } from "lucide-react";
+import { ArrowLeft, Table as TableIcon, CalendarDays, Download, Printer, PieChart, ShieldAlert, Share2 } from "lucide-react";
 import Header from "@/components/Header";
 import TransactionsTable from "@/components/TransactionsTable";
 import TransactionCalendar from "@/components/TransactionCalendar";
@@ -9,6 +9,7 @@ import OverchargeAlerts from "@/components/OverchargeAlerts";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { getTransactions, type Transaction } from "@/lib/transactions";
+import { toast } from "@/hooks/use-toast";
 
 function exportToExcel(transactions: Transaction[]) {
   const header = "Date\tDescription\tAmount";
@@ -56,6 +57,18 @@ const Results = () => {
             </span>
             {transactions.length > 0 && (
               <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => {
+                    navigator.clipboard.writeText(window.location.href);
+                    toast({ title: "Link copied!", description: "Share this link with family or advocates." });
+                  }}
+                >
+                  <Share2 className="h-4 w-4" />
+                  Share
+                </Button>
                 <Button variant="outline" size="sm" className="gap-2" onClick={() => window.print()}>
                   <Printer className="h-4 w-4" />
                   Print
