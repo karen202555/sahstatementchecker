@@ -1,17 +1,20 @@
-import { AlertTriangle, Copy, TrendingUp, ShieldAlert } from "lucide-react";
+import { AlertTriangle, Copy, TrendingUp, ShieldAlert, DollarSign, Info } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import type { Transaction } from "@/lib/transactions";
-import { detectOvercharges, type Alert } from "@/lib/overcharge-detector";
+import { detectOvercharges, type Alert, type ManagementMode } from "@/lib/overcharge-detector";
 
 interface Props {
   transactions: Transaction[];
+  managementMode?: ManagementMode;
 }
 
-const iconMap = {
+const iconMap: Record<string, typeof Copy> = {
   duplicate: Copy,
   unusual: TrendingUp,
   changed: AlertTriangle,
+  "management-fee": DollarSign,
 };
 
 const severityStyles = {
@@ -26,8 +29,8 @@ const badgeVariant = {
   low: "outline" as const,
 };
 
-const OverchargeAlerts = ({ transactions }: Props) => {
-  const alerts = detectOvercharges(transactions);
+const OverchargeAlerts = ({ transactions, managementMode = "self" }: Props) => {
+  const alerts = detectOvercharges(transactions, { managementMode });
 
   return (
     <div className="space-y-4">
@@ -37,7 +40,7 @@ const OverchargeAlerts = ({ transactions }: Props) => {
             <ShieldAlert className="h-10 w-10 text-primary" />
             <p className="text-lg font-semibold text-foreground">No issues detected</p>
             <p className="text-sm text-muted-foreground text-center max-w-md">
-              We checked for duplicate charges, unusual amounts, and fee changes. Everything looks good!
+              We checked for duplicate charges, unusual amounts, fee changes, and management fees. Everything looks good!
             </p>
           </CardContent>
         </Card>
@@ -51,7 +54,7 @@ const OverchargeAlerts = ({ transactions }: Props) => {
           </div>
 
           {alerts.map((alert, i) => {
-            const Icon = iconMap[alert.type];
+            const Icon = iconMap[alert.type] || AlertTriangle;
             return (
               <Card key={i} className={`border ${severityStyles[alert.severity]}`}>
                 <CardHeader className="pb-2">
@@ -59,6 +62,16 @@ const OverchargeAlerts = ({ transactions }: Props) => {
                     <div className="flex items-center gap-2">
                       <Icon className="h-4 w-4 shrink-0" />
                       <CardTitle className="text-sm font-semibold">{alert.title}</CardTitle>
+                      {alert.type === "duplicate" && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs text-xs">
+                            Similar charge detected on a nearby date for a similar amount. Review to confirm it's not a billing error.
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
                     </div>
                     <Badge variant={badgeVariant[alert.severity]} className="text-xs shrink-0">
                       {alert.severity}
