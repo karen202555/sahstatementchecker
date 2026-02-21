@@ -9,6 +9,7 @@ import Results from "./pages/Results";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
+import SettingsPage from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,7 @@ const AppRoutes = () => (
     {/* Reset password must be public — user arrives from email link, not logged in */}
     <Route path="/reset-password" element={<ResetPassword />} />
     <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+    <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
     {/* Results is accessible without auth (shared links) */}
     <Route path="/results" element={<Results />} />
     <Route path="*" element={<NotFound />} />

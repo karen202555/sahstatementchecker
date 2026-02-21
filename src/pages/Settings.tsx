@@ -1,0 +1,214 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
+import Header from "@/components/Header";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const LANGUAGES = [
+  { code: "en", label: "English" },
+  { code: "vi", label: "Tiếng Việt" },
+  { code: "zh", label: "中文" },
+  { code: "ja", label: "日本語" },
+  { code: "ko", label: "한국어" },
+  { code: "es", label: "Español" },
+  { code: "fr", label: "Français" },
+];
+
+const Settings = () => {
+  const { user, profile } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  // Display name
+  const [displayName, setDisplayName] = useState("");
+  const [savingName, setSavingName] = useState(false);
+
+  // Password
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [savingPassword, setSavingPassword] = useState(false);
+
+  // Language
+  const [language, setLanguage] = useState("en");
+  const [savingLanguage, setSavingLanguage] = useState(false);
+
+  useEffect(() => {
+    if (profile) {
+      setDisplayName(profile.display_name || "");
+      setLanguage((profile as any).preferred_language || "en");
+    }
+  }, [profile]);
+
+  async function handleSaveName() {
+    const trimmed = displayName.trim();
+    if (!trimmed || trimmed.length > 100) {
+      toast({ title: "Invalid name", description: "Display name must be 1-100 characters.", variant: "destructive" });
+      return;
+    }
+    setSavingName(true);
+    try {
+      const { error: dbError } = await supabase
+        .from("profiles")
+        .update({ display_name: trimmed })
+        .eq("id", user!.id);
+      if (dbError) throw dbError;
+
+      await supabase.auth.updateUser({ data: { display_name: trimmed } });
+      toast({ title: "Display name updated" });
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    } finally {
+      setSavingName(false);
+    }
+  }
+
+  async function handleChangePassword() {
+    if (newPassword.length < 6) {
+      toast({ title: "Too short", description: "Password must be at least 6 characters.", variant: "destructive" });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast({ title: "Mismatch", description: "Passwords do not match.", variant: "destructive" });
+      return;
+    }
+    setSavingPassword(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      setNewPassword("");
+      setConfirmPassword("");
+      toast({ title: "Password updated" });
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    } finally {
+      setSavingPassword(false);
+    }
+  }
+
+  async function handleSaveLanguage(value: string) {
+    setLanguage(value);
+    setSavingLanguage(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ preferred_language: value } as any)
+        .eq("id", user!.id);
+      if (error) throw error;
+      toast({ title: "Language preference saved" });
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    } finally {
+      setSavingLanguage(false);
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Header />
+      <main className="container mx-auto max-w-2xl px-4 py-8 space-y-6">
+        <button
+          onClick={() => navigate("/")}
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </button>
+
+        <h1 className="text-2xl font-bold text-foreground">Settings</h1>
+
+        {/* Display Name */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Display Name</CardTitle>
+            <CardDescription>This is how your name appears in the app.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="display-name">Name</Label>
+              <Input
+                id="display-name"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                maxLength={100}
+                placeholder="Your display name"
+              />
+            </div>
+            <Button onClick={handleSaveName} disabled={savingName} size="sm">
+              {savingName ? "Saving…" : "Save"}
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Change Password */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Change Password</CardTitle>
+            <CardDescription>Update your account password.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="new-password">New Password</Label>
+              <Input
+                id="new-password"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Minimum 6 characters"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirm-password">Confirm Password</Label>
+              <Input
+                id="confirm-password"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Re-enter new password"
+              />
+            </div>
+            <Button onClick={handleChangePassword} disabled={savingPassword} size="sm">
+              {savingPassword ? "Updating…" : "Update Password"}
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Preferred Language */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Preferred Language</CardTitle>
+            <CardDescription>Choose your display language. More languages coming soon.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Select value={language} onValueChange={handleSaveLanguage} disabled={savingLanguage}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {LANGUAGES.map((lang) => (
+                  <SelectItem key={lang.code} value={lang.code}>
+                    {lang.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </CardContent>
+        </Card>
+      </main>
+    </div>
+  );
+};
+
+export default Settings;

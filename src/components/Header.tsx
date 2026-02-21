@@ -1,4 +1,4 @@
-import { FileSpreadsheet, LogOut, User } from "lucide-react";
+import { FileSpreadsheet, LogOut, Settings, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
@@ -26,6 +26,9 @@ const Header = () => {
               <User className="h-4 w-4" />
               <span>{profile?.display_name || user.email}</span>
             </div>
+            <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} title="Settings">
+              <Settings className="h-4 w-4" />
+            </Button>
             <Button variant="ghost" size="sm" onClick={signOut} className="gap-2">
               <LogOut className="h-4 w-4" />
               <span className="hidden sm:inline">Sign out</span>
