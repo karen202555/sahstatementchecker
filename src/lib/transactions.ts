@@ -19,7 +19,12 @@ export interface StatementFile {
   date_range: string;
 }
 
-export async function uploadAndParse(file: File, sessionId: string): Promise<Transaction[]> {
+export interface ParseResult {
+  transactions: Transaction[];
+  lowConfidence: boolean;
+}
+
+export async function uploadAndParse(file: File, sessionId: string): Promise<ParseResult> {
   const formData = new FormData();
   formData.append('file', file);
   formData.append('session_id', sessionId);
@@ -29,7 +34,10 @@ export async function uploadAndParse(file: File, sessionId: string): Promise<Tra
   });
 
   if (error) throw error;
-  return data.transactions || [];
+  return {
+    transactions: data.transactions || [],
+    lowConfidence: data.low_confidence || false,
+  };
 }
 
 export async function getTransactions(sessionId: string): Promise<Transaction[]> {

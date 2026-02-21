@@ -1,12 +1,30 @@
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import type { Transaction } from "@/lib/transactions";
+import { detectOvercharges, type ManagementMode } from "@/lib/overcharge-detector";
+import { useMemo } from "react";
 
 interface TransactionsTableProps {
   transactions: Transaction[];
+  managementMode?: ManagementMode;
 }
 
-const TransactionsTable = ({ transactions }: TransactionsTableProps) => {
+const TransactionsTable = ({ transactions, managementMode = "self" }: TransactionsTableProps) => {
+  // Build a set of flagged transaction IDs
+  const flaggedIds = useMemo(() => {
+    const alerts = detectOvercharges(transactions, { managementMode });
+    const ids = new Map<string, string>();
+    for (const alert of alerts) {
+      for (const tx of alert.transactions) {
+        if (!ids.has(tx.id)) {
+          ids.set(tx.id, alert.type === "duplicate" ? "Possible Duplicate" : alert.type === "management-fee" ? "Fee Issue" : "Anomaly");
+        }
+      }
+    }
+    return ids;
+  }, [transactions, managementMode]);
+
   if (transactions.length === 0) {
     return (
       <div className="rounded-xl border border-border bg-card p-12 text-center">
@@ -24,21 +42,39 @@ const TransactionsTable = ({ transactions }: TransactionsTableProps) => {
             <TableHead className="font-semibold">Description</TableHead>
             <TableHead className="font-semibold text-right text-primary">Income</TableHead>
             <TableHead className="font-semibold text-right text-destructive">Expense</TableHead>
+            <TableHead className="font-semibold w-[120px]">Flag</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {transactions.map((tx) => (
-            <TableRow key={tx.id}>
-              <TableCell className="font-mono text-sm">{tx.date}</TableCell>
-              <TableCell>{tx.description}</TableCell>
-              <TableCell className="text-right font-mono text-primary">
-                {tx.amount >= 0 ? `$${tx.amount.toFixed(2)}` : ""}
-              </TableCell>
-              <TableCell className="text-right font-mono text-destructive">
-                {tx.amount < 0 ? `$${Math.abs(tx.amount).toFixed(2)}` : ""}
-              </TableCell>
-            </TableRow>
-          ))}
+          {transactions.map((tx) => {
+            const flag = flaggedIds.get(tx.id);
+            return (
+              <TableRow key={tx.id} className={flag ? "bg-destructive/5" : ""}>
+                <TableCell className="font-mono text-sm">{tx.date}</TableCell>
+                <TableCell>{tx.description}</TableCell>
+                <TableCell className="text-right font-mono text-primary">
+                  {tx.amount >= 0 ? `$${tx.amount.toFixed(2)}` : ""}
+                </TableCell>
+                <TableCell className="text-right font-mono text-destructive">
+                  {tx.amount < 0 ? `$${Math.abs(tx.amount).toFixed(2)}` : ""}
+                </TableCell>
+                <TableCell>
+                  {flag && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge variant="destructive" className="text-[10px] cursor-help">
+                          {flag}
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs text-xs">
+                        Similar charge detected on a nearby date for a similar amount.
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </div>

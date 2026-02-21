@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { Transaction } from "@/lib/transactions";
+import { detectOvercharges, type ManagementMode } from "@/lib/overcharge-detector";
 import {
   parse,
   isValid,
@@ -25,6 +26,7 @@ import {
 
 interface TransactionCalendarProps {
   transactions: Transaction[];
+  managementMode?: ManagementMode;
 }
 
 type ViewMode = "month" | "week" | "day";
@@ -46,7 +48,19 @@ function parseDate(dateStr: string): Date | null {
   return isValid(d) ? d : null;
 }
 
-const TransactionCalendar = ({ transactions }: TransactionCalendarProps) => {
+const TransactionCalendar = ({ transactions, managementMode = "self" }: TransactionCalendarProps) => {
+  // Build flagged IDs
+  const flaggedIds = useMemo(() => {
+    const alerts = detectOvercharges(transactions, { managementMode });
+    const ids = new Set<string>();
+    for (const alert of alerts) {
+      if (alert.type === "duplicate") {
+        for (const tx of alert.transactions) ids.add(tx.id);
+      }
+    }
+    return ids;
+  }, [transactions, managementMode]);
+
   // Auto-detect starting month from first transaction
   const initialDate = useMemo(() => {
     for (const tx of transactions) {
@@ -85,7 +99,6 @@ const TransactionCalendar = ({ transactions }: TransactionCalendarProps) => {
         ? `${format(startOfWeek(currentDate, { weekStartsOn: 0 }), "MMM d")} – ${format(endOfWeek(currentDate, { weekStartsOn: 0 }), "MMM d, yyyy")}`
         : format(currentDate, "EEEE, MMMM d, yyyy");
 
-  // Build days arrays
   const monthDays = useMemo(() => {
     const start = startOfWeek(startOfMonth(currentDate), { weekStartsOn: 0 });
     const end = endOfWeek(endOfMonth(currentDate), { weekStartsOn: 0 });
@@ -118,17 +131,28 @@ const TransactionCalendar = ({ transactions }: TransactionCalendarProps) => {
           {format(day, "d")}
         </span>
         <div className="flex-1 space-y-0.5 overflow-hidden">
-          {dayTx.slice(0, tall ? 6 : MAX_VISIBLE).map((tx) => (
-            <div
-              key={tx.id}
-              className={`text-[10px] leading-tight rounded px-1 py-0.5 truncate ${tx.amount < 0 ? "bg-destructive/10 text-destructive" : "bg-green-500/10 text-green-700 dark:text-green-400"}`}
-            >
-              <span className="font-mono mr-1">
-                {tx.amount < 0 ? "-" : "+"}${Math.abs(tx.amount).toFixed(2)}
-              </span>
-              <span className="opacity-80">{tx.description}</span>
-            </div>
-          ))}
+          {dayTx.slice(0, tall ? 6 : MAX_VISIBLE).map((tx) => {
+            const isFlagged = flaggedIds.has(tx.id);
+            return (
+              <div
+                key={tx.id}
+                className={`text-[10px] leading-tight rounded px-1 py-0.5 truncate ${
+                  isFlagged
+                    ? "bg-destructive/20 text-destructive ring-1 ring-destructive/30"
+                    : tx.amount < 0
+                      ? "bg-destructive/10 text-destructive"
+                      : "bg-green-500/10 text-green-700 dark:text-green-400"
+                }`}
+                title={isFlagged ? "Possible Duplicate" : undefined}
+              >
+                <span className="font-mono mr-1">
+                  {tx.amount < 0 ? "-" : "+"}${Math.abs(tx.amount).toFixed(2)}
+                </span>
+                <span className="opacity-80">{tx.description}</span>
+                {isFlagged && <span className="ml-1 font-semibold">⚑</span>}
+              </div>
+            );
+          })}
           {dayTx.length > (tall ? 6 : MAX_VISIBLE) && (
             <span className="text-[10px] text-muted-foreground pl-1">
               +{dayTx.length - (tall ? 6 : MAX_VISIBLE)} more
@@ -147,14 +171,22 @@ const TransactionCalendar = ({ transactions }: TransactionCalendarProps) => {
         {dayTx.length === 0 ? (
           <p className="text-sm text-muted-foreground py-8 text-center">No transactions on this date</p>
         ) : (
-          dayTx.map((tx) => (
-            <div key={tx.id} className="flex items-center justify-between rounded-lg bg-muted px-4 py-3">
-              <span className="text-sm text-foreground">{tx.description}</span>
-              <Badge variant={tx.amount < 0 ? "destructive" : "default"} className="font-mono shrink-0 ml-3">
-                {tx.amount < 0 ? "-" : "+"}${Math.abs(tx.amount).toFixed(2)}
-              </Badge>
-            </div>
-          ))
+          dayTx.map((tx) => {
+            const isFlagged = flaggedIds.has(tx.id);
+            return (
+              <div key={tx.id} className={`flex items-center justify-between rounded-lg px-4 py-3 ${isFlagged ? "bg-destructive/10" : "bg-muted"}`}>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-foreground">{tx.description}</span>
+                  {isFlagged && (
+                    <Badge variant="destructive" className="text-[10px]">Possible Duplicate</Badge>
+                  )}
+                </div>
+                <Badge variant={tx.amount < 0 ? "destructive" : "default"} className="font-mono shrink-0 ml-3">
+                  {tx.amount < 0 ? "-" : "+"}${Math.abs(tx.amount).toFixed(2)}
+                </Badge>
+              </div>
+            );
+          })
         )}
       </div>
     );
@@ -194,7 +226,6 @@ const TransactionCalendar = ({ transactions }: TransactionCalendarProps) => {
         renderDailyView()
       ) : (
         <div className="rounded-xl border border-border overflow-hidden">
-          {/* Day headers */}
           <div className="grid grid-cols-7 bg-muted">
             {DAY_NAMES.map((name) => (
               <div key={name} className="text-center text-xs font-medium text-muted-foreground py-2 border-b border-border">
@@ -202,7 +233,6 @@ const TransactionCalendar = ({ transactions }: TransactionCalendarProps) => {
               </div>
             ))}
           </div>
-          {/* Day cells */}
           <div className="grid grid-cols-7">
             {(viewMode === "month" ? monthDays : weekDays).map((day) =>
               renderDayCell(day, viewMode === "week")

@@ -46,10 +46,8 @@ function validateSessionId(sessionId: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(sessionId);
 }
 
-/** Extract user_id from Bearer JWT without verifying (service role validates via RLS) */
 async function getUserIdFromJwt(authHeader: string | null): Promise<string | null> {
   if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
-  const token = authHeader.slice(7);
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY')!;
@@ -116,11 +114,16 @@ serve(async (req) => {
     }
 
     let transactions: { date: string; description: string; amount: number }[] = [];
+    let lowConfidence = false;
 
     if (fileExtension === 'csv') {
       const text = await file.text();
       transactions = parseCSV(text);
       transactions = normalizeCsvDates(transactions);
+      // Check CSV confidence
+      if (transactions.length === 0 && text.trim().length > 50) {
+        lowConfidence = true;
+      }
     } else if (fileExtension === 'pdf') {
       const buffer = await file.arrayBuffer();
       const base64 = arrayBufferToBase64(buffer);
@@ -130,7 +133,16 @@ serve(async (req) => {
       transactions = await parseWithAI(text, fileName, null);
     }
 
-    transactions = transactions.map(t => ({
+    // Validate parsed transactions for confidence
+    const validTx = transactions.filter(t => t.date && t.description && typeof t.amount === 'number');
+    if (transactions.length > 0 && validTx.length < transactions.length * 0.5) {
+      lowConfidence = true;
+    }
+    if (transactions.length === 0) {
+      lowConfidence = true;
+    }
+
+    transactions = validTx.map(t => ({
       ...t,
       description: sanitizeDescription(t.description || 'Unknown'),
       amount: Math.abs(t.amount) > MAX_AMOUNT ? 0 : t.amount,
@@ -154,7 +166,11 @@ serve(async (req) => {
       if (error) throw error;
     }
 
-    return new Response(JSON.stringify({ transactions, count: transactions.length }), {
+    return new Response(JSON.stringify({
+      transactions,
+      count: transactions.length,
+      low_confidence: lowConfidence,
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
@@ -168,9 +184,14 @@ serve(async (req) => {
 
 function normalizeDateStr(dateStr: string, useDDMM: boolean): string {
   if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
-  const sep = dateStr.includes('/') ? '/' : '-';
-  const parts = dateStr.split(sep);
+
+  // Clean up common formatting issues
+  const cleaned = dateStr.trim().replace(/\s+/g, '');
+
+  const sep = cleaned.includes('/') ? '/' : cleaned.includes('-') ? '-' : '.';
+  const parts = cleaned.split(sep);
   if (parts.length !== 3) return dateStr;
+
   let day: number, month: number, year: number;
   if (parts[0].length === 4) {
     year = parseInt(parts[0]); month = parseInt(parts[1]); day = parseInt(parts[2]);
@@ -180,6 +201,10 @@ function normalizeDateStr(dateStr: string, useDDMM: boolean): string {
     month = parseInt(parts[0]); day = parseInt(parts[1]); year = parseInt(parts[2]);
   }
   if (year < 100) year += 2000;
+
+  // Validate
+  if (month < 1 || month > 12 || day < 1 || day > 31 || year < 1900 || year > 2100) return dateStr;
+
   return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
@@ -187,8 +212,9 @@ function detectDateFormat(transactions: { date: string }[]): boolean {
   let needsDDMM = false;
   let needsMMDD = false;
   for (const tx of transactions) {
-    const sep = tx.date.includes('/') ? '/' : '-';
-    const parts = tx.date.split(sep);
+    const cleaned = tx.date.trim().replace(/\s+/g, '');
+    const sep = cleaned.includes('/') ? '/' : cleaned.includes('-') ? '-' : '.';
+    const parts = cleaned.split(sep);
     if (parts.length !== 3 || parts[0].length === 4) continue;
     const a = parseInt(parts[0]);
     const b = parseInt(parts[1]);
@@ -197,7 +223,7 @@ function detectDateFormat(transactions: { date: string }[]): boolean {
   }
   if (needsDDMM && !needsMMDD) return true;
   if (needsMMDD && !needsDDMM) return false;
-  return true;
+  return true; // default to DD/MM (Australian)
 }
 
 function normalizeCsvDates(
@@ -207,33 +233,52 @@ function normalizeCsvDates(
   return transactions.map(tx => ({ ...tx, date: normalizeDateStr(tx.date, useDDMM) }));
 }
 
+function parseAmount(raw: string): number | null {
+  // Handle currency symbols, commas, parentheses for negatives
+  let cleaned = raw.trim();
+  const isNegative = cleaned.startsWith('(') && cleaned.endsWith(')') || cleaned.startsWith('-');
+  cleaned = cleaned.replace(/[()$€£¥,\s]/g, '');
+  if (cleaned.startsWith('-')) cleaned = cleaned.slice(1);
+  const num = parseFloat(cleaned);
+  if (isNaN(num)) return null;
+  return isNegative ? -num : num;
+}
+
 function parseCSV(text: string): { date: string; description: string; amount: number }[] {
   if (text.length > MAX_CSV_LENGTH) throw new Error('CSV file too large');
   const lines = text.trim().split('\n');
   if (lines.length < 2) return [];
   if (lines.length > MAX_CSV_LINES) throw new Error('Too many lines in CSV');
+
+  // Try to detect header - more flexible matching
   const header = lines[0].toLowerCase();
-  const hasHeader = header.includes('date') || header.includes('amount') || header.includes('description');
+  const hasHeader = /date|amount|description|narration|particular|debit|credit|transaction/i.test(header);
   const dataLines = hasHeader ? lines.slice(1) : lines;
+
   const transactions: { date: string; description: string; amount: number }[] = [];
   for (const line of dataLines) {
+    if (!line.trim()) continue;
     const cols = line.split(',').map(c => c.trim().replace(/^"|"$/g, ''));
-    if (cols.length < 3) continue;
+    if (cols.length < 2) continue;
+
     let date = '', description = '', amount = 0;
     for (const col of cols) {
-      if (/\d{1,4}[-\/]\d{1,2}[-\/]\d{1,4}/.test(col)) {
+      if (/\d{1,4}[-\/\.]\d{1,2}[-\/\.]\d{1,4}/.test(col) && !date) {
         date = col;
-      } else if (!isNaN(parseFloat(col.replace(/[$,]/g, ''))) && col.replace(/[$,\s]/g, '').match(/^-?\d+\.?\d*$/)) {
-        amount = parseFloat(col.replace(/[$,]/g, ''));
-      } else if (col.length > 2 && !description) {
-        description = col;
+      } else {
+        const parsed = parseAmount(col);
+        if (parsed !== null && col.replace(/[$€£¥,\s()]/g, '').match(/^-?\d+\.?\d*$/)) {
+          if (amount === 0) amount = parsed;
+        } else if (col.length > 2 && !description) {
+          description = col;
+        }
       }
     }
     if (!description) description = cols[1] || 'Unknown';
     if (!date) date = cols[0] || 'Unknown';
     if (amount === 0) {
-      const lastNum = parseFloat(cols[cols.length - 1]?.replace(/[$,]/g, '') || '0');
-      if (!isNaN(lastNum)) amount = lastNum;
+      const lastParsed = parseAmount(cols[cols.length - 1] || '0');
+      if (lastParsed !== null) amount = lastParsed;
     }
     if (date && description) transactions.push({ date, description, amount });
   }
@@ -248,7 +293,7 @@ async function parseWithAI(
   const apiKey = Deno.env.get('LOVABLE_API_KEY');
   if (!apiKey) { console.error('No LOVABLE_API_KEY found'); return []; }
 
-  const systemPrompt = `You are a precise bank statement parser. Extract every individual transaction from the document.
+  const systemPrompt = `You are a precise bank/provider statement parser. Extract every individual transaction from the document.
 
 Rules:
 - Return ONLY a JSON array of objects with "date", "description", and "amount" fields.
@@ -261,6 +306,9 @@ Rules:
 - Return ALL dates in yyyy-MM-dd format (e.g., 2025-10-01). Do NOT preserve the original date format.
 - Do NOT include summary rows like "Opening Balance", "Closing Balance", "Total", or "Balance Carried Forward".
 - Do NOT include interest rate information, account numbers, or headers.
+- Handle varied column layouts: some statements use separate Debit/Credit columns, some use a single Amount column.
+- Handle currency symbols ($, AUD, etc.) by stripping them from amounts.
+- If amounts are shown in parentheses like (50.00), treat them as negative.
 - No markdown, no explanation, just the JSON array.`;
 
   let userContent: any;

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Table as TableIcon, CalendarDays, Download, Printer, PieChart, ShieldAlert, Share2, FileDown } from "lucide-react";
 import Header from "@/components/Header";
@@ -6,11 +6,14 @@ import TransactionsTable from "@/components/TransactionsTable";
 import TransactionCalendar from "@/components/TransactionCalendar";
 import SpendingSummary from "@/components/SpendingSummary";
 import OverchargeAlerts from "@/components/OverchargeAlerts";
+import IssueSummary from "@/components/IssueSummary";
+import BetaFeedback from "@/components/BetaFeedback";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { getTransactions, type Transaction } from "@/lib/transactions";
 import { toast } from "@/hooks/use-toast";
 import { generatePdfReport } from "@/lib/pdf-report";
+import type { ManagementMode } from "@/lib/overcharge-detector";
 
 function exportToExcel(transactions: Transaction[]) {
   const header = "Date\tDescription\tAmount";
@@ -32,6 +35,8 @@ const Results = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const sessionId = searchParams.get("session");
+  const modeParam = searchParams.get("mode") as ManagementMode | null;
+  const managementMode: ManagementMode = modeParam === "provider" ? "provider" : "self";
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -92,38 +97,48 @@ const Results = () => {
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
           </div>
         ) : (
-          <Tabs defaultValue="calendar">
-            <TabsList className="mb-6">
-              <TabsTrigger value="table" className="gap-2">
-                <TableIcon className="h-4 w-4" />
-                Table
-              </TabsTrigger>
-              <TabsTrigger value="calendar" className="gap-2">
-                <CalendarDays className="h-4 w-4" />
-                Calendar
-              </TabsTrigger>
-              <TabsTrigger value="summary" className="gap-2">
-                <PieChart className="h-4 w-4" />
-                Summary
-              </TabsTrigger>
-              <TabsTrigger value="alerts" className="gap-2">
-                <ShieldAlert className="h-4 w-4" />
-                Alerts
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="table">
-              <TransactionsTable transactions={transactions} />
-            </TabsContent>
-            <TabsContent value="calendar">
-              <TransactionCalendar transactions={transactions} />
-            </TabsContent>
-            <TabsContent value="summary">
-              <SpendingSummary transactions={transactions} />
-            </TabsContent>
-            <TabsContent value="alerts">
-              <OverchargeAlerts transactions={transactions} />
-            </TabsContent>
-          </Tabs>
+          <div className="space-y-6">
+            {/* Issue summary panel */}
+            {transactions.length > 0 && (
+              <IssueSummary transactions={transactions} managementMode={managementMode} />
+            )}
+
+            <Tabs defaultValue="calendar">
+              <TabsList className="mb-6">
+                <TabsTrigger value="table" className="gap-2">
+                  <TableIcon className="h-4 w-4" />
+                  Table
+                </TabsTrigger>
+                <TabsTrigger value="calendar" className="gap-2">
+                  <CalendarDays className="h-4 w-4" />
+                  Calendar
+                </TabsTrigger>
+                <TabsTrigger value="summary" className="gap-2">
+                  <PieChart className="h-4 w-4" />
+                  Summary
+                </TabsTrigger>
+                <TabsTrigger value="alerts" className="gap-2">
+                  <ShieldAlert className="h-4 w-4" />
+                  Alerts
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="table">
+                <TransactionsTable transactions={transactions} managementMode={managementMode} />
+              </TabsContent>
+              <TabsContent value="calendar">
+                <TransactionCalendar transactions={transactions} managementMode={managementMode} />
+              </TabsContent>
+              <TabsContent value="summary">
+                <SpendingSummary transactions={transactions} />
+              </TabsContent>
+              <TabsContent value="alerts">
+                <OverchargeAlerts transactions={transactions} managementMode={managementMode} />
+              </TabsContent>
+            </Tabs>
+
+            {/* Beta feedback */}
+            {sessionId && <BetaFeedback sessionId={sessionId} />}
+          </div>
         )}
       </main>
     </div>
