@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 interface Profile {
   id: string;
   display_name: string | null;
+  preferred_language: string | null;
 }
 
 interface AuthContextType {
@@ -32,7 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function loadProfile(userId: string) {
     const { data } = await supabase
       .from("profiles")
-      .select("id, display_name")
+      .select("id, display_name, preferred_language")
       .eq("id", userId)
       .single();
     setProfile(data as Profile | null);
