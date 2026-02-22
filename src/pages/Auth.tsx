@@ -9,12 +9,14 @@ import { toast } from "@/hooks/use-toast";
 
 type Mode = "login" | "signup" | "forgot";
 
+const BETA_CODE = "BETA2025";
+
 const Auth = () => {
   const navigate = useNavigate();
   const [mode, setMode] = useState<Mode>("login");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
-  const [form, setForm] = useState({ email: "", password: "", displayName: "" });
+  const [form, setForm] = useState({ email: "", password: "", displayName: "", inviteCode: "" });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,6 +29,10 @@ const Auth = () => {
         if (error) throw error;
         setSent(true);
       } else if (mode === "signup") {
+        if (form.inviteCode.trim().toUpperCase() !== BETA_CODE) {
+          toast({ title: "Invalid invite code", description: "Please enter a valid beta invite code. Email admin@statementchecker.au to request access.", variant: "destructive" });
+          return;
+        }
         const { error } = await supabase.auth.signUp({
           email: form.email,
           password: form.password,
@@ -94,16 +100,35 @@ const Auth = () => {
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
               {mode === "signup" && (
-                <div className="space-y-1.5">
-                  <Label htmlFor="displayName">Display name</Label>
-                  <Input
-                    id="displayName"
-                    placeholder="Jane Smith"
-                    value={form.displayName}
-                    onChange={(e) => setForm((f) => ({ ...f, displayName: e.target.value }))}
-                    required
-                  />
-                </div>
+                <>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="displayName">Display name</Label>
+                    <Input
+                      id="displayName"
+                      placeholder="Jane Smith"
+                      value={form.displayName}
+                      onChange={(e) => setForm((f) => ({ ...f, displayName: e.target.value }))}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="inviteCode">Beta invite code</Label>
+                    <Input
+                      id="inviteCode"
+                      placeholder="Enter your invite code"
+                      value={form.inviteCode}
+                      onChange={(e) => setForm((f) => ({ ...f, inviteCode: e.target.value }))}
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Don't have a code? Email{" "}
+                      <a href="mailto:admin@statementchecker.au" className="text-primary underline-offset-4 hover:underline">
+                        admin@statementchecker.au
+                      </a>{" "}
+                      to request access.
+                    </p>
+                  </div>
+                </>
               )}
               <div className="space-y-1.5">
                 <Label htmlFor="email">Email</Label>
