@@ -49,7 +49,7 @@ const BetaFeedback = ({ sessionId }: Props) => {
     return (
       <Card className="border-border">
         <CardContent className="py-6 text-center">
-          <p className="text-sm text-muted-foreground">Thank you for helping us improve CareSense!</p>
+          <p className="text-sm text-muted-foreground">Thank you for helping us improve Statement Checker!</p>
         </CardContent>
       </Card>
     );
