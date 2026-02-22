@@ -134,7 +134,7 @@ export function generatePdfReport(transactions: Transaction[]) {
     doc.setPage(i);
     doc.setFontSize(8);
     doc.setTextColor(150);
-    doc.text(`SAH Statement Checker · Page ${i} of ${pageCount}`, 14, 290);
+    doc.text(`Statement Checker · Page ${i} of ${pageCount}`, 14, 290);
   }
 
   doc.save("statement-report.pdf");

@@ -167,7 +167,7 @@ const FileDropzone = ({ onManagementModeChange }: Props) => {
       <div className="flex items-start gap-2 text-xs text-muted-foreground">
         <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
         <p>
-          CareSense is in beta. Results may not be perfect. Always confirm findings before contacting your provider.
+          Statement Checker is in beta. Results may not be perfect. Always confirm findings before contacting your provider.
         </p>
       </div>
     </div>
