@@ -70,7 +70,7 @@ const Auth = () => {
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
             <FileSpreadsheet className="h-7 w-7" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground">Statement Sense</h1>
+          <h1 className="text-2xl font-bold text-foreground">Statement Checker</h1>
           <p className="text-sm text-muted-foreground text-center">{subtitle}</p>
         </div>
 
