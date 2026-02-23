@@ -6,29 +6,44 @@ import { detectOvercharges } from "@/lib/overcharge-detector";
 import { categorizeTransaction } from "@/lib/categorize";
 import { useMemo } from "react";
 
+function formatDateDDMMYYYY(dateStr: string): string {
+  // Parse yyyy-MM-dd directly to avoid timezone issues
+  const parts = dateStr.split("-");
+  if (parts.length === 3) {
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  }
+  return dateStr;
+}
+
 const CATEGORY_BG: Record<string, string> = {
   "Meals & Food": "bg-orange-100 dark:bg-orange-900/30",
-  "Housing & Accommodation": "bg-blue-100 dark:bg-blue-900/30",
+  "Nursing": "bg-pink-100 dark:bg-pink-900/30",
+  "Domestic": "bg-blue-100 dark:bg-blue-900/30",
+  "Allied Health": "bg-violet-100 dark:bg-violet-900/30",
   "Transport": "bg-purple-100 dark:bg-purple-900/30",
   "Personal Care": "bg-sky-100 dark:bg-sky-900/30",
-  "Health & Medical": "bg-pink-100 dark:bg-pink-900/30",
+  "Housing & Accommodation": "bg-indigo-100 dark:bg-indigo-900/30",
+  "Health & Medical": "bg-rose-100 dark:bg-rose-900/30",
   "Community & Social": "bg-teal-100 dark:bg-teal-900/30",
-  "Support Worker": "bg-indigo-100 dark:bg-indigo-900/30",
+  "Support Worker": "bg-cyan-100 dark:bg-cyan-900/30",
   "Fees & Admin": "bg-yellow-100 dark:bg-yellow-900/30",
-  "Equipment & Supplies": "bg-violet-100 dark:bg-violet-900/30",
+  "Equipment & Supplies": "bg-amber-100 dark:bg-amber-900/30",
   "Other": "",
 };
 
 const CATEGORY_DOT: Record<string, string> = {
   "Meals & Food": "bg-orange-500",
-  "Housing & Accommodation": "bg-blue-500",
+  "Nursing": "bg-pink-500",
+  "Domestic": "bg-blue-500",
+  "Allied Health": "bg-violet-500",
   "Transport": "bg-purple-500",
   "Personal Care": "bg-sky-500",
-  "Health & Medical": "bg-pink-500",
+  "Housing & Accommodation": "bg-indigo-500",
+  "Health & Medical": "bg-rose-500",
   "Community & Social": "bg-teal-500",
-  "Support Worker": "bg-indigo-500",
+  "Support Worker": "bg-cyan-500",
   "Fees & Admin": "bg-yellow-500",
-  "Equipment & Supplies": "bg-violet-500",
+  "Equipment & Supplies": "bg-amber-500",
   "Other": "bg-gray-400",
 };
 
@@ -41,9 +56,19 @@ const TransactionsTable = ({ transactions }: TransactionsTableProps) => {
     const alerts = detectOvercharges(transactions);
     const ids = new Map<string, string>();
     for (const alert of alerts) {
-      for (const tx of alert.transactions) {
-        if (!ids.has(tx.id)) {
-          ids.set(tx.id, alert.type === "duplicate" ? "Possible Duplicate" : alert.type === "management-fee" ? "Fee Issue" : "Anomaly");
+      if (alert.type === "duplicate") {
+        // Only flag the second transaction in a duplicate pair
+        for (let i = 1; i < alert.transactions.length; i++) {
+          const tx = alert.transactions[i];
+          if (!ids.has(tx.id)) {
+            ids.set(tx.id, "Possible Duplicate");
+          }
+        }
+      } else {
+        for (const tx of alert.transactions) {
+          if (!ids.has(tx.id)) {
+            ids.set(tx.id, alert.type === "management-fee" ? "Fee Issue" : "Anomaly");
+          }
         }
       }
     }
@@ -85,7 +110,7 @@ const TransactionsTable = ({ transactions }: TransactionsTableProps) => {
                 : CATEGORY_BG[category] || "";
             return (
               <TableRow key={tx.id} className={rowBg}>
-                <TableCell className="font-mono text-base">{tx.date}</TableCell>
+                <TableCell className="font-mono text-base">{formatDateDDMMYYYY(tx.date)}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1.5">
                     <span className={`inline-block h-2.5 w-2.5 rounded-full shrink-0 ${CATEGORY_DOT[category] || "bg-gray-400"}`} />
