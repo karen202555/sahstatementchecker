@@ -67,7 +67,10 @@ const TransactionCalendar = ({ transactions }: TransactionCalendarProps) => {
     const ids = new Set<string>();
     for (const alert of alerts) {
       if (alert.type === "duplicate") {
-        for (const tx of alert.transactions) ids.add(tx.id);
+        // Only flag the second transaction in a duplicate pair
+        for (let i = 1; i < alert.transactions.length; i++) {
+          ids.add(alert.transactions[i].id);
+        }
       }
     }
     return ids;
@@ -288,7 +291,7 @@ const TransactionCalendar = ({ transactions }: TransactionCalendarProps) => {
         <span className="inline-flex items-center gap-1"><span className="h-3 w-3 rounded-full bg-orange-500" /> Meals</span>
         <span className="inline-flex items-center gap-1"><span className="h-3 w-3 rounded-full bg-blue-500" /> Housing</span>
         <span className="inline-flex items-center gap-1"><span className="h-3 w-3 rounded-full bg-purple-500" /> Transport</span>
-        <span className="inline-flex items-center gap-1"><span className="h-3 w-3 rounded-full bg-destructive" /> Issue</span>
+        <span className="inline-flex items-center gap-1"><span className="h-3 w-3 rounded-full bg-destructive" /> Potential Issue</span>
       </div>
     </div>
   );

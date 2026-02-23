@@ -8,14 +8,17 @@ export interface CategorySummary {
 }
 
 const CATEGORY_RULES: { category: string; keywords: string[]; color: string }[] = [
-  { category: "Transport", keywords: ["transport", "taxi", "uber", "bus", "train", "fuel", "petrol", "car", "parking", "toll"], color: "hsl(168, 72%, 40%)" },
-  { category: "Personal Care", keywords: ["personal care", "hygiene", "grooming", "hair", "salon", "beauty", "pharmacy", "chemist"], color: "hsl(220, 70%, 55%)" },
+  { category: "Nursing", keywords: ["nursing", "nurse"], color: "hsl(340, 65%, 50%)" },
   { category: "Meals & Food", keywords: ["meal", "food", "lunch", "dinner", "breakfast", "catering", "grocery", "supermarket", "cafe", "restaurant"], color: "hsl(35, 85%, 55%)" },
+  { category: "Domestic", keywords: ["domestic", "cleaning", "laundry", "housekeeping", "home care"], color: "hsl(220, 70%, 55%)" },
+  { category: "Allied Health", keywords: ["allied health", "dietician", "nutrition", "podiatry", "physio", "therapy", "occupational", "speech", "psychology"], color: "hsl(310, 50%, 50%)" },
+  { category: "Transport", keywords: ["transport", "taxi", "uber", "bus", "train", "fuel", "petrol", "car", "parking", "toll"], color: "hsl(270, 60%, 55%)" },
+  { category: "Personal Care", keywords: ["personal care", "hygiene", "grooming", "hair", "salon", "beauty", "pharmacy", "chemist"], color: "hsl(190, 70%, 45%)" },
   { category: "Housing & Accommodation", keywords: ["rent", "housing", "accommodation", "mortgage", "lease", "board", "lodging", "sil", "supported independent"], color: "hsl(280, 60%, 55%)" },
-  { category: "Health & Medical", keywords: ["medical", "health", "doctor", "hospital", "dental", "physio", "therapy", "nurse", "clinical", "gp", "specialist"], color: "hsl(0, 70%, 55%)" },
+  { category: "Health & Medical", keywords: ["medical", "health", "doctor", "hospital", "dental", "clinical", "gp", "specialist"], color: "hsl(0, 70%, 55%)" },
   { category: "Community & Social", keywords: ["community", "social", "activity", "recreation", "excursion", "outing", "event", "group"], color: "hsl(140, 60%, 45%)" },
-  { category: "Support Worker", keywords: ["support worker", "support staff", "attendant", "carer", "assistance", "aide"], color: "hsl(200, 70%, 50%)" },
-  { category: "Fees & Admin", keywords: ["fee", "admin", "management", "plan management", "service fee", "charge", "commission", "invoice"], color: "hsl(45, 80%, 50%)" },
+  { category: "Support Worker", keywords: ["support worker", "support staff", "attendant", "carer", "aide"], color: "hsl(200, 70%, 50%)" },
+  { category: "Fees & Admin", keywords: ["fee", "admin", "management", "plan management", "service fee", "commission", "invoice"], color: "hsl(45, 80%, 50%)" },
   { category: "Equipment & Supplies", keywords: ["equipment", "supplies", "consumable", "assistive", "device", "wheelchair", "continence"], color: "hsl(310, 50%, 50%)" },
 ];
 
