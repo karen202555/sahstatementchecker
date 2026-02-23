@@ -1,13 +1,12 @@
-import { AlertTriangle, Copy, TrendingUp, ShieldAlert, DollarSign, Info } from "lucide-react";
+import { AlertTriangle, Copy, TrendingUp, DollarSign, Info, ShieldAlert } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import type { Transaction } from "@/lib/transactions";
-import { detectOvercharges, type Alert, type ManagementMode } from "@/lib/overcharge-detector";
+import { detectOvercharges, type Alert } from "@/lib/overcharge-detector";
 
 interface Props {
   transactions: Transaction[];
-  managementMode?: ManagementMode;
 }
 
 const iconMap: Record<string, typeof Copy> = {
@@ -29,8 +28,8 @@ const badgeVariant = {
   low: "outline" as const,
 };
 
-const OverchargeAlerts = ({ transactions, managementMode = "self" }: Props) => {
-  const alerts = detectOvercharges(transactions, { managementMode });
+const OverchargeAlerts = ({ transactions }: Props) => {
+  const alerts = detectOvercharges(transactions);
 
   return (
     <div className="space-y-4">
@@ -38,8 +37,8 @@ const OverchargeAlerts = ({ transactions, managementMode = "self" }: Props) => {
         <Card>
           <CardContent className="flex flex-col items-center gap-3 py-12">
             <ShieldAlert className="h-10 w-10 text-primary" />
-            <p className="text-lg font-semibold text-foreground">No issues detected</p>
-            <p className="text-sm text-muted-foreground text-center max-w-md">
+            <p className="text-xl font-semibold text-foreground">No issues detected</p>
+            <p className="text-base text-muted-foreground text-center max-w-md">
               We checked for duplicate charges, unusual amounts, fee changes, and management fees. Everything looks good!
             </p>
           </CardContent>
@@ -48,7 +47,7 @@ const OverchargeAlerts = ({ transactions, managementMode = "self" }: Props) => {
         <>
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-destructive" />
-            <p className="text-sm font-semibold text-foreground">
+            <p className="text-base font-semibold text-foreground">
               {alerts.length} potential issue{alerts.length !== 1 ? "s" : ""} found
             </p>
           </div>
@@ -60,30 +59,30 @@ const OverchargeAlerts = ({ transactions, managementMode = "self" }: Props) => {
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <Icon className="h-4 w-4 shrink-0" />
-                      <CardTitle className="text-sm font-semibold">{alert.title}</CardTitle>
+                      <Icon className="h-5 w-5 shrink-0" />
+                      <CardTitle className="text-base font-semibold">{alert.title}</CardTitle>
                       {alert.type === "duplicate" && (
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                            <Info className="h-4 w-4 text-muted-foreground cursor-help" />
                           </TooltipTrigger>
-                          <TooltipContent className="max-w-xs text-xs">
+                          <TooltipContent className="max-w-xs text-sm">
                             Similar charge detected on a nearby date for a similar amount. Review to confirm it's not a billing error.
                           </TooltipContent>
                         </Tooltip>
                       )}
                     </div>
-                    <Badge variant={badgeVariant[alert.severity]} className="text-xs shrink-0">
+                    <Badge variant={badgeVariant[alert.severity]} className="text-sm shrink-0">
                       {alert.severity}
                     </Badge>
                   </div>
                 </CardHeader>
                 <CardContent className="pt-0">
-                  <p className="text-sm opacity-80">{alert.description}</p>
+                  <p className="text-base opacity-80">{alert.description}</p>
                   {alert.transactions.length > 1 && (
                     <div className="mt-3 space-y-1">
                       {alert.transactions.slice(0, 5).map((tx, j) => (
-                        <div key={j} className="flex justify-between text-xs opacity-70">
+                        <div key={j} className="flex justify-between text-sm opacity-70">
                           <span>{tx.date}</span>
                           <span>${Math.abs(tx.amount).toFixed(2)}</span>
                         </div>

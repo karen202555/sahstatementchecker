@@ -4,24 +4,13 @@ import { Upload, Loader2, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { uploadAndParse, generateSessionId } from "@/lib/transactions";
 import { toast } from "@/hooks/use-toast";
-import type { ManagementMode } from "@/lib/overcharge-detector";
 
-interface Props {
-  onManagementModeChange?: (mode: ManagementMode) => void;
-}
-
-const FileDropzone = ({ onManagementModeChange }: Props) => {
+const FileDropzone = () => {
   const navigate = useNavigate();
   const [isDragging, setIsDragging] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
   const [parsing, setParsing] = useState(false);
   const [parsedCount, setParsedCount] = useState(0);
-  const [managementMode, setManagementMode] = useState<ManagementMode>("self");
-
-  const handleModeChange = (mode: ManagementMode) => {
-    setManagementMode(mode);
-    onManagementModeChange?.(mode);
-  };
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -73,7 +62,7 @@ const FileDropzone = ({ onManagementModeChange }: Props) => {
           description: "We couldn't confidently structure this statement. Please review the raw extraction on the results page.",
         });
       }
-      navigate(`/results?session=${sessionId}&mode=${managementMode}`);
+      navigate(`/results?session=${sessionId}`);
     } catch (error: any) {
       toast({
         title: "Processing failed",
@@ -87,23 +76,6 @@ const FileDropzone = ({ onManagementModeChange }: Props) => {
 
   return (
     <div className="mx-auto w-full max-w-2xl space-y-4">
-      {/* Management mode toggle */}
-      <div className="flex items-center justify-center gap-1 rounded-lg border border-border overflow-hidden">
-        {(["self", "provider"] as ManagementMode[]).map((mode) => (
-          <button
-            key={mode}
-            onClick={() => handleModeChange(mode)}
-            className={`flex-1 px-4 py-2 text-sm font-medium capitalize transition-colors ${
-              managementMode === mode
-                ? "bg-primary text-primary-foreground"
-                : "bg-card text-foreground hover:bg-accent"
-            }`}
-          >
-            {mode === "self" ? "Self-managed" : "Provider-managed"}
-          </button>
-        ))}
-      </div>
-
       <div
         onClick={handleClick}
         onDragOver={handleDragOver}
@@ -120,10 +92,10 @@ const FileDropzone = ({ onManagementModeChange }: Props) => {
             <Upload className="h-5 w-5 text-muted-foreground" />
           </div>
           <div>
-            <p className="text-base font-semibold text-foreground">
+            <p className="text-lg font-semibold text-foreground">
               Drop your statements here
             </p>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-1 text-base text-muted-foreground">
               or click to browse · PDF, CSV, TXT supported · Multiple files allowed
             </p>
           </div>
@@ -136,7 +108,7 @@ const FileDropzone = ({ onManagementModeChange }: Props) => {
             {files.map((file, i) => (
               <div
                 key={i}
-                className="flex items-center justify-between rounded-lg bg-muted px-4 py-2 text-sm"
+                className="flex items-center justify-between rounded-lg bg-muted px-4 py-2 text-base"
               >
                 <span className="text-foreground">{file.name}</span>
                 <span className="text-muted-foreground">
@@ -148,7 +120,7 @@ const FileDropzone = ({ onManagementModeChange }: Props) => {
           <Button
             onClick={handleParse}
             disabled={parsing}
-            className="w-full"
+            className="w-full text-lg"
             size="lg"
           >
             {parsing ? (
@@ -164,8 +136,8 @@ const FileDropzone = ({ onManagementModeChange }: Props) => {
       )}
 
       {/* Beta disclaimer */}
-      <div className="flex items-start gap-2 text-xs text-muted-foreground">
-        <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+      <div className="flex items-start gap-2 text-sm text-muted-foreground">
+        <Info className="h-4 w-4 mt-0.5 shrink-0" />
         <p>
           Statement Checker is in beta. Results may not be perfect. Always confirm findings before contacting your provider.
         </p>

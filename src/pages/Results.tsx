@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Table as TableIcon, CalendarDays, Download, Printer, PieChart, ShieldAlert, Share2, FileDown } from "lucide-react";
 import Header from "@/components/Header";
@@ -13,7 +13,6 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { getTransactions, type Transaction } from "@/lib/transactions";
 import { toast } from "@/hooks/use-toast";
 import { generatePdfReport } from "@/lib/pdf-report";
-import type { ManagementMode } from "@/lib/overcharge-detector";
 
 function exportToExcel(transactions: Transaction[]) {
   const header = "Date\tDescription\tAmount";
@@ -35,8 +34,6 @@ const Results = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const sessionId = searchParams.get("session");
-  const modeParam = searchParams.get("mode") as ManagementMode | null;
-  const managementMode: ManagementMode = modeParam === "provider" ? "provider" : "self";
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -52,13 +49,13 @@ const Results = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <main className="container mx-auto px-6 py-8">
-        <div className="mb-6 flex items-center justify-between">
-          <Button variant="ghost" onClick={() => navigate("/")} className="gap-2">
+        <div className="mb-6 flex items-center justify-between no-print">
+          <Button variant="ghost" onClick={() => navigate("/")} className="gap-2 text-base">
             <ArrowLeft className="h-4 w-4" />
             Back to Home
           </Button>
           <div className="flex items-center gap-3">
-            <span className="text-sm text-muted-foreground">
+            <span className="text-base text-muted-foreground">
               {transactions.length} transaction{transactions.length !== 1 ? "s" : ""} found
             </span>
             {transactions.length > 0 && (
@@ -100,44 +97,50 @@ const Results = () => {
           <div className="space-y-6">
             {/* Issue summary panel */}
             {transactions.length > 0 && (
-              <IssueSummary transactions={transactions} managementMode={managementMode} />
+              <div className="no-print">
+                <IssueSummary transactions={transactions} />
+              </div>
             )}
 
             <Tabs defaultValue="calendar">
-              <TabsList className="mb-6">
-                <TabsTrigger value="table" className="gap-2">
+              <TabsList className="mb-6 no-print">
+                <TabsTrigger value="table" className="gap-2 text-base">
                   <TableIcon className="h-4 w-4" />
                   Table
                 </TabsTrigger>
-                <TabsTrigger value="calendar" className="gap-2">
+                <TabsTrigger value="calendar" className="gap-2 text-base">
                   <CalendarDays className="h-4 w-4" />
                   Calendar
                 </TabsTrigger>
-                <TabsTrigger value="summary" className="gap-2">
+                <TabsTrigger value="summary" className="gap-2 text-base">
                   <PieChart className="h-4 w-4" />
                   Summary
                 </TabsTrigger>
-                <TabsTrigger value="alerts" className="gap-2">
+                <TabsTrigger value="alerts" className="gap-2 text-base">
                   <ShieldAlert className="h-4 w-4" />
                   Alerts
                 </TabsTrigger>
               </TabsList>
               <TabsContent value="table">
-                <TransactionsTable transactions={transactions} managementMode={managementMode} />
+                <TransactionsTable transactions={transactions} />
               </TabsContent>
               <TabsContent value="calendar">
-                <TransactionCalendar transactions={transactions} managementMode={managementMode} />
+                <TransactionCalendar transactions={transactions} />
               </TabsContent>
               <TabsContent value="summary">
                 <SpendingSummary transactions={transactions} />
               </TabsContent>
               <TabsContent value="alerts">
-                <OverchargeAlerts transactions={transactions} managementMode={managementMode} />
+                <OverchargeAlerts transactions={transactions} />
               </TabsContent>
             </Tabs>
 
             {/* Beta feedback */}
-            {sessionId && <BetaFeedback sessionId={sessionId} />}
+            {sessionId && (
+              <div className="no-print">
+                <BetaFeedback sessionId={sessionId} />
+              </div>
+            )}
           </div>
         )}
       </main>
