@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Upload, Loader2, Info } from "lucide-react";
+import { Upload, Loader2, Info, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { uploadAndParse, generateSessionId } from "@/lib/transactions";
 import { toast } from "@/hooks/use-toast";
@@ -10,7 +10,6 @@ const FileDropzone = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
   const [parsing, setParsing] = useState(false);
-  const [parsedCount, setParsedCount] = useState(0);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -44,7 +43,6 @@ const FileDropzone = () => {
   const handleParse = async () => {
     if (files.length === 0) return;
     setParsing(true);
-    setParsedCount(0);
     const sessionId = generateSessionId();
 
     try {
@@ -53,7 +51,6 @@ const FileDropzone = () => {
         files.map(async (file) => {
           const result = await uploadAndParse(file, sessionId);
           if (result.lowConfidence) anyLowConfidence = true;
-          setParsedCount((prev) => prev + 1);
         })
       );
       if (anyLowConfidence) {
@@ -111,9 +108,22 @@ const FileDropzone = () => {
                 className="flex items-center justify-between rounded-lg bg-muted px-4 py-2 text-base"
               >
                 <span className="text-foreground">{file.name}</span>
-                <span className="text-muted-foreground">
-                  {(file.size / 1024).toFixed(1)} KB
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground">
+                    {(file.size / 1024).toFixed(1)} KB
+                  </span>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setFiles((prev) => prev.filter((_, idx) => idx !== i));
+                    }}
+                    className="rounded-full p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                    aria-label={`Remove ${file.name}`}
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -126,7 +136,7 @@ const FileDropzone = () => {
             {parsing ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Processing {parsedCount} of {files.length}...
+                Processing your files...
               </>
             ) : (
               `Process ${files.length} file${files.length > 1 ? "s" : ""}`

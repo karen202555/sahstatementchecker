@@ -1,3 +1,4 @@
+import { parse, isValid } from "date-fns";
 import type { Transaction } from "./transactions";
 
 export type ManagementMode = "provider" | "self";
@@ -58,9 +59,27 @@ function similarity(a: string, b: string): number {
   return total === 0 ? 0 : shared / total;
 }
 
+function parseDate(dateStr: string): Date | null {
+  const formats = [
+    "yyyy-MM-dd",
+    "dd/MM/yy",
+    "dd/MM/yyyy",
+    "MM/dd/yyyy",
+    "M/d/yyyy",
+    "MM-dd-yyyy",
+  ];
+  for (const fmt of formats) {
+    const d = parse(dateStr, fmt, new Date());
+    if (isValid(d)) return d;
+  }
+  const d = new Date(dateStr);
+  return isValid(d) ? d : null;
+}
+
 function daysBetween(dateA: string, dateB: string): number {
-  const a = new Date(dateA);
-  const b = new Date(dateB);
+  const a = parseDate(dateA);
+  const b = parseDate(dateB);
+  if (!a || !b) return Infinity;
   return Math.abs((a.getTime() - b.getTime()) / (1000 * 60 * 60 * 24));
 }
 
@@ -97,8 +116,8 @@ function findDuplicates(transactions: Transaction[]): Alert[] {
         isDuplicate = true;
         reason = `Similar charge detected ${days} day${days > 1 ? "s" : ""} apart for ~$${Math.abs(a.amount).toFixed(2)}`;
       }
-      // Same service type repeated on same day (different amount ok if description matches closely)
-      else if (a.date === b.date && sim >= 0.85) {
+      // Same service type repeated on same day with similar amount
+      else if (a.date === b.date && sim >= 0.85 && close) {
         isDuplicate = true;
         reason = `Same service appears twice on ${a.date}`;
       }
