@@ -207,7 +207,7 @@ const Results = () => {
               <TabsList className="mb-4 no-print h-9 gap-0.5 bg-muted p-0.5 rounded-md">
                 <TabsTrigger value="table" className="gap-1.5 text-[14px] font-medium h-8 px-3 rounded-md data-[state=active]:bg-card data-[state=active]:shadow-sm">
                   <TableIcon className="h-4 w-4 opacity-70" />
-                  Table
+                  Reconcile
                 </TabsTrigger>
                 <TabsTrigger value="calendar" className="gap-1.5 text-[14px] font-medium h-8 px-3 rounded-md data-[state=active]:bg-card data-[state=active]:shadow-sm">
                   <CalendarDays className="h-4 w-4 opacity-70" />

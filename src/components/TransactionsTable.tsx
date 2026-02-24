@@ -18,7 +18,7 @@ function formatDateDDMMYYYY(dateStr: string): string {
 }
 
 const CATEGORY_BG: Record<string, string> = {
-  "Meals & Food": "bg-orange-50 dark:bg-orange-950/20",
+  "Meals": "bg-orange-50 dark:bg-orange-950/20",
   "Nursing": "bg-pink-50 dark:bg-pink-950/20",
   "Domestic": "bg-blue-50 dark:bg-blue-950/20",
   "Allied Health": "bg-violet-50 dark:bg-violet-950/20",
@@ -34,7 +34,7 @@ const CATEGORY_BG: Record<string, string> = {
 };
 
 const CATEGORY_DOT: Record<string, string> = {
-  "Meals & Food": "bg-orange-400",
+  "Meals": "bg-orange-400",
   "Nursing": "bg-pink-400",
   "Domestic": "bg-blue-400",
   "Allied Health": "bg-violet-400",
@@ -69,6 +69,13 @@ const STATUS_COLORS: Record<string, string> = {
   "escalated": "bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-300",
 };
 
+interface DisputeEdit {
+  description: string;
+  amount: string;
+  note: string;
+  isDuplicate: boolean;
+}
+
 interface TransactionsTableProps {
   transactions: Transaction[];
   decisions?: Map<string, TransactionDecision>;
@@ -86,8 +93,8 @@ const TransactionsTable = ({
   isAuthenticated = false,
   onStatusUpdate,
 }: TransactionsTableProps) => {
-  const [disputeNotes, setDisputeNotes] = useState<Map<string, string>>(new Map());
   const [expandedDispute, setExpandedDispute] = useState<string | null>(null);
+  const [disputeEdits, setDisputeEdits] = useState<Map<string, DisputeEdit>>(new Map());
 
   const flaggedIds = useMemo(() => {
     const alerts = detectOvercharges(transactions);
@@ -115,14 +122,36 @@ const TransactionsTable = ({
     );
   }
 
+  const openDispute = (tx: Transaction) => {
+    const flag = flaggedIds.get(tx.id);
+    const isDuplicate = flag === "Possible Duplicate";
+    setDisputeEdits((prev) => {
+      const next = new Map(prev);
+      if (!next.has(tx.id)) {
+        next.set(tx.id, {
+          description: tx.description,
+          amount: isDuplicate ? "0.00" : Math.abs(tx.amount).toFixed(2),
+          note: isDuplicate ? "Duplicate charge" : "",
+          isDuplicate,
+        });
+      }
+      return next;
+    });
+    setExpandedDispute(tx.id);
+  };
+
   const handleDecision = (tx: Transaction, decision: DecisionType) => {
     if (!onDecision) return;
     if (decision === "dispute") {
       if (expandedDispute === tx.id) {
-        onDecision(tx, decision, disputeNotes.get(tx.id) || undefined);
+        const edit = disputeEdits.get(tx.id);
+        const note = edit
+          ? `Agreed: ${edit.description} @ $${edit.amount}${edit.note ? ` — ${edit.note}` : ""}`
+          : undefined;
+        onDecision(tx, decision, note);
         setExpandedDispute(null);
       } else {
-        setExpandedDispute(tx.id);
+        openDispute(tx);
       }
     } else {
       onDecision(tx, decision);
@@ -134,6 +163,19 @@ const TransactionsTable = ({
     if (!onDecision) return;
     onDecision(tx, suggestion.preferred_decision);
   };
+
+  const updateDisputeEdit = (txId: string, field: keyof DisputeEdit, value: string | boolean) => {
+    setDisputeEdits((prev) => {
+      const next = new Map(prev);
+      const current = next.get(txId);
+      if (current) {
+        next.set(txId, { ...current, [field]: value });
+      }
+      return next;
+    });
+  };
+
+  const colCount = isAuthenticated ? 10 : 9;
 
   return (
     <div className="rounded-[10px] border border-border bg-card overflow-x-auto shadow-[0_1px_3px_0_hsl(0_0%_0%/0.04)]">
@@ -169,6 +211,8 @@ const TransactionsTable = ({
                 : isIncome
                   ? "bg-green-50/40 dark:bg-green-950/10"
                   : CATEGORY_BG[category] || "";
+
+            const disputeEdit = disputeEdits.get(tx.id);
 
             return (
               <>
@@ -324,37 +368,84 @@ const TransactionsTable = ({
                     </TableCell>
                   )}
                 </TableRow>
-                {expandedDispute === tx.id && (
-                  <TableRow key={`${tx.id}-note`} className="bg-red-50/30 dark:bg-red-950/10">
-                    <TableCell colSpan={isAuthenticated ? 10 : 9} className="py-2 px-3">
-                      <div className="flex items-center gap-2">
-                        <Input
-                          placeholder="Add a note about this dispute (optional)..."
-                          value={disputeNotes.get(tx.id) || ""}
-                          onChange={(e) =>
-                            setDisputeNotes((prev) => {
-                              const next = new Map(prev);
-                              next.set(tx.id, e.target.value);
-                              return next;
-                            })
-                          }
-                          className="max-w-md text-[14px] h-8"
+                {/* Dispute edit row — mimics the charged line with editable fields */}
+                {expandedDispute === tx.id && disputeEdit && (
+                  <TableRow key={`${tx.id}-dispute`} className="bg-red-50/40 dark:bg-red-950/15 border-l-2 border-red-400">
+                    <TableCell className="font-mono text-[13px] py-2 px-3 text-muted-foreground whitespace-nowrap">
+                      {formatDateDDMMYYYY(tx.date)}
+                    </TableCell>
+                    <TableCell className="py-2 px-3">
+                      <span className="text-[12px] font-semibold text-red-600">YOUR RESPONSE</span>
+                    </TableCell>
+                    <TableCell className="py-2 px-3" colSpan={1}>
+                      <Input
+                        value={disputeEdit.description}
+                        onChange={(e) => updateDisputeEdit(tx.id, "description", e.target.value)}
+                        className="h-7 text-[13px] bg-white dark:bg-background"
+                        placeholder="Agreed description..."
+                      />
+                    </TableCell>
+                    <TableCell className="py-2 px-3" colSpan={2}>
+                      <label className="flex items-center gap-1.5">
+                        <input
+                          type="checkbox"
+                          checked={disputeEdit.isDuplicate}
+                          onChange={(e) => {
+                            updateDisputeEdit(tx.id, "isDuplicate", e.target.checked);
+                            if (e.target.checked) {
+                              updateDisputeEdit(tx.id, "amount", "0.00");
+                              updateDisputeEdit(tx.id, "note", "Duplicate charge");
+                            } else {
+                              updateDisputeEdit(tx.id, "amount", Math.abs(tx.amount).toFixed(2));
+                              updateDisputeEdit(tx.id, "note", "");
+                            }
+                          }}
+                          className="rounded"
                         />
+                        <span className="text-[12px] font-medium text-red-700">Duplicate</span>
+                      </label>
+                    </TableCell>
+                    <TableCell className="py-2 px-3 text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <span className="text-[13px] text-muted-foreground">$</span>
+                        <Input
+                          value={disputeEdit.amount}
+                          onChange={(e) => updateDisputeEdit(tx.id, "amount", e.target.value)}
+                          className="h-7 text-[13px] w-20 text-right font-mono bg-white dark:bg-background"
+                          disabled={disputeEdit.isDuplicate}
+                        />
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-2 px-3" colSpan={isAuthenticated ? 2 : 1}>
+                      <Input
+                        value={disputeEdit.note}
+                        onChange={(e) => updateDisputeEdit(tx.id, "note", e.target.value)}
+                        className="h-7 text-[13px] bg-white dark:bg-background"
+                        placeholder="Reason for dispute..."
+                        disabled={disputeEdit.isDuplicate}
+                      />
+                    </TableCell>
+                    <TableCell className="py-2 px-3">
+                      <div className="flex items-center gap-1">
                         <Button
                           size="sm"
                           variant="destructive"
-                          className="h-8 text-[13px] font-medium rounded-lg"
+                          className="h-7 text-[12px] font-medium rounded-md px-2"
                           onClick={() => {
-                            onDecision?.(tx, "dispute", disputeNotes.get(tx.id) || undefined);
+                            const edit = disputeEdits.get(tx.id);
+                            const note = edit
+                              ? `Agreed: ${edit.description} @ $${edit.amount}${edit.note ? ` — ${edit.note}` : ""}`
+                              : undefined;
+                            onDecision?.(tx, "dispute", note);
                             setExpandedDispute(null);
                           }}
                         >
-                          Submit Dispute
+                          Submit
                         </Button>
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="h-8 text-[13px] font-medium rounded-lg"
+                          className="h-7 text-[12px] font-medium rounded-md px-2"
                           onClick={() => setExpandedDispute(null)}
                         >
                           Cancel

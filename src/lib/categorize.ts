@@ -10,7 +10,7 @@ export interface CategorySummary {
 const CATEGORY_RULES: { category: string; keywords: string[]; color: string }[] = [
   { category: "Income", keywords: ["income", "payment received", "deposit", "credit", "funding", "ndis payment", "plan funding", "reimbursement", "refund"], color: "hsl(140, 70%, 40%)" },
   { category: "Nursing", keywords: ["nursing", "nurse"], color: "hsl(25, 70%, 50%)" },
-  { category: "Meals & Food", keywords: ["meal", "food", "lunch", "dinner", "breakfast", "catering", "grocery", "supermarket", "cafe", "restaurant"], color: "hsl(35, 85%, 55%)" },
+  { category: "Meals", keywords: ["meal", "food", "lunch", "dinner", "breakfast", "catering", "grocery", "supermarket", "cafe", "restaurant"], color: "hsl(35, 85%, 55%)" },
   { category: "Domestic", keywords: ["domestic", "cleaning", "laundry", "housekeeping", "home care"], color: "hsl(220, 70%, 55%)" },
   { category: "Allied Health", keywords: ["allied health", "dietician", "nutrition", "podiatry", "physio", "therapy", "occupational", "speech", "psychology"], color: "hsl(310, 50%, 50%)" },
   { category: "Transport", keywords: ["transport", "taxi", "uber", "bus", "train", "fuel", "petrol", "car", "parking", "toll"], color: "hsl(270, 60%, 55%)" },
