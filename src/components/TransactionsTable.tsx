@@ -1,13 +1,16 @@
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { CheckCircle2, XCircle, HelpCircle, Lightbulb } from "lucide-react";
 import type { Transaction } from "@/lib/transactions";
 import { detectOvercharges } from "@/lib/overcharge-detector";
 import { categorizeTransaction } from "@/lib/categorize";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import type { DecisionType, MemorySuggestion, TransactionDecision } from "@/hooks/use-decisions";
 
 function formatDateDDMMYYYY(dateStr: string): string {
-  // Parse yyyy-MM-dd directly to avoid timezone issues
   const parts = dateStr.split("-");
   if (parts.length === 3) {
     return `${parts[2]}/${parts[1]}/${parts[0]}`;
@@ -47,17 +50,35 @@ const CATEGORY_DOT: Record<string, string> = {
   "Other": "bg-gray-400",
 };
 
+const DECISION_STYLES: Record<DecisionType, string> = {
+  approve: "border-green-500 bg-green-50 dark:bg-green-900/20",
+  dispute: "border-red-500 bg-red-50 dark:bg-red-900/20",
+  "not-sure": "border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20",
+};
+
 interface TransactionsTableProps {
   transactions: Transaction[];
+  decisions?: Map<string, TransactionDecision>;
+  onDecision?: (tx: Transaction, decision: DecisionType, note?: string) => void;
+  getSuggestion?: (tx: Transaction) => MemorySuggestion | null;
+  isAuthenticated?: boolean;
 }
 
-const TransactionsTable = ({ transactions }: TransactionsTableProps) => {
+const TransactionsTable = ({
+  transactions,
+  decisions = new Map(),
+  onDecision,
+  getSuggestion,
+  isAuthenticated = false,
+}: TransactionsTableProps) => {
+  const [disputeNotes, setDisputeNotes] = useState<Map<string, string>>(new Map());
+  const [expandedDispute, setExpandedDispute] = useState<string | null>(null);
+
   const flaggedIds = useMemo(() => {
     const alerts = detectOvercharges(transactions);
     const ids = new Map<string, string>();
     for (const alert of alerts) {
       if (alert.type === "duplicate") {
-        // Only flag the second transaction in a duplicate pair
         for (let i = 1; i < alert.transactions.length; i++) {
           const tx = alert.transactions[i];
           if (!ids.has(tx.id)) {
@@ -83,6 +104,27 @@ const TransactionsTable = ({ transactions }: TransactionsTableProps) => {
     );
   }
 
+  const handleDecision = (tx: Transaction, decision: DecisionType) => {
+    if (!onDecision) return;
+    if (decision === "dispute") {
+      if (expandedDispute === tx.id) {
+        // Submit dispute with note
+        onDecision(tx, decision, disputeNotes.get(tx.id) || undefined);
+        setExpandedDispute(null);
+      } else {
+        setExpandedDispute(tx.id);
+      }
+    } else {
+      onDecision(tx, decision);
+      setExpandedDispute(null);
+    }
+  };
+
+  const handleSuggestionAccept = (tx: Transaction, suggestion: MemorySuggestion) => {
+    if (!onDecision) return;
+    onDecision(tx, suggestion.preferred_decision);
+  };
+
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden">
       <Table>
@@ -96,6 +138,9 @@ const TransactionsTable = ({ transactions }: TransactionsTableProps) => {
             <TableHead className="font-semibold text-base text-right text-primary">Income</TableHead>
             <TableHead className="font-semibold text-base text-right text-destructive">Expense</TableHead>
             <TableHead className="font-semibold text-base w-[120px]">Flag</TableHead>
+            {isAuthenticated && (
+              <TableHead className="font-semibold text-base w-[200px] no-print">Decision</TableHead>
+            )}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -103,44 +148,176 @@ const TransactionsTable = ({ transactions }: TransactionsTableProps) => {
             const flag = flaggedIds.get(tx.id);
             const { category } = categorizeTransaction(tx.description);
             const isIncome = tx.amount >= 0;
-            const rowBg = flag
-              ? "bg-destructive/10"
-              : isIncome
-                ? "bg-green-50 dark:bg-green-900/10"
-                : CATEGORY_BG[category] || "";
+            const existing = decisions.get(tx.id);
+            const suggestion = getSuggestion && !existing ? getSuggestion(tx) : null;
+
+            const decisionBorder = existing ? DECISION_STYLES[existing.decision] : "";
+            const rowBg = existing
+              ? decisionBorder
+              : flag
+                ? "bg-destructive/10"
+                : isIncome
+                  ? "bg-green-50 dark:bg-green-900/10"
+                  : CATEGORY_BG[category] || "";
+
             return (
-              <TableRow key={tx.id} className={rowBg}>
-                <TableCell className="font-mono text-base">{formatDateDDMMYYYY(tx.date)}</TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-1.5">
-                    <span className={`inline-block h-2.5 w-2.5 rounded-full shrink-0 ${CATEGORY_DOT[category] || "bg-gray-400"}`} />
-                    <span className="text-sm">{category}</span>
-                  </div>
-                </TableCell>
-                <TableCell className="text-base">{tx.description}</TableCell>
-                <TableCell className="text-right font-mono text-base text-muted-foreground">—</TableCell>
-                <TableCell className="text-right font-mono text-base text-muted-foreground">—</TableCell>
-                <TableCell className="text-right font-mono text-base text-primary">
-                  {isIncome ? `$${tx.amount.toFixed(2)}` : ""}
-                </TableCell>
-                <TableCell className="text-right font-mono text-base text-destructive">
-                  {!isIncome ? `$${Math.abs(tx.amount).toFixed(2)}` : ""}
-                </TableCell>
-                <TableCell>
-                  {flag && (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Badge variant="destructive" className="text-xs cursor-help">
-                          {flag}
-                        </Badge>
-                      </TooltipTrigger>
-                      <TooltipContent className="max-w-xs text-sm">
-                        Similar charge detected on a nearby date for a similar amount.
-                      </TooltipContent>
-                    </Tooltip>
+              <>
+                <TableRow key={tx.id} className={`${rowBg} ${existing ? "border-l-2" : ""}`}>
+                  <TableCell className="font-mono text-base">{formatDateDDMMYYYY(tx.date)}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1.5">
+                      <span className={`inline-block h-2.5 w-2.5 rounded-full shrink-0 ${CATEGORY_DOT[category] || "bg-gray-400"}`} />
+                      <span className="text-sm">{category}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-base">{tx.description}</TableCell>
+                  <TableCell className="text-right font-mono text-base text-muted-foreground">—</TableCell>
+                  <TableCell className="text-right font-mono text-base text-muted-foreground">—</TableCell>
+                  <TableCell className="text-right font-mono text-base text-primary">
+                    {isIncome ? `$${tx.amount.toFixed(2)}` : ""}
+                  </TableCell>
+                  <TableCell className="text-right font-mono text-base text-destructive">
+                    {!isIncome ? `$${Math.abs(tx.amount).toFixed(2)}` : ""}
+                  </TableCell>
+                  <TableCell>
+                    {flag && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Badge variant="destructive" className="text-xs cursor-help">
+                            {flag}
+                          </Badge>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs text-sm">
+                          Similar charge detected on a nearby date for a similar amount.
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+                  </TableCell>
+                  {isAuthenticated && (
+                    <TableCell className="no-print">
+                      {existing ? (
+                        <div className="flex items-center gap-1.5">
+                          {existing.decision === "approve" && (
+                            <Badge className="bg-green-600 text-white text-xs gap-1">
+                              <CheckCircle2 className="h-3 w-3" /> Approved
+                            </Badge>
+                          )}
+                          {existing.decision === "dispute" && (
+                            <Badge variant="destructive" className="text-xs gap-1">
+                              <XCircle className="h-3 w-3" /> Disputed
+                            </Badge>
+                          )}
+                          {existing.decision === "not-sure" && (
+                            <Badge className="bg-yellow-500 text-white text-xs gap-1">
+                              <HelpCircle className="h-3 w-3" /> Not Sure
+                            </Badge>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-1">
+                          {suggestion && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  onClick={() => handleSuggestionAccept(tx, suggestion)}
+                                  className="flex items-center gap-1 text-xs text-amber-600 hover:text-amber-800 mb-0.5"
+                                >
+                                  <Lightbulb className="h-3 w-3" />
+                                  <span className="underline">
+                                    You usually {suggestion.preferred_decision} {category}
+                                  </span>
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent className="max-w-xs text-sm">
+                                Based on {suggestion.occurrence_count} previous decisions. Click to apply.
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                          <div className="flex items-center gap-1">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7 text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30"
+                                  onClick={() => handleDecision(tx, "approve")}
+                                >
+                                  <CheckCircle2 className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Approve</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30"
+                                  onClick={() => handleDecision(tx, "dispute")}
+                                >
+                                  <XCircle className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Dispute</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7 text-yellow-600 hover:bg-yellow-100 dark:hover:bg-yellow-900/30"
+                                  onClick={() => handleDecision(tx, "not-sure")}
+                                >
+                                  <HelpCircle className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Not Sure</TooltipContent>
+                            </Tooltip>
+                          </div>
+                        </div>
+                      )}
+                    </TableCell>
                   )}
-                </TableCell>
-              </TableRow>
+                </TableRow>
+                {/* Dispute note expansion row */}
+                {expandedDispute === tx.id && (
+                  <TableRow key={`${tx.id}-note`} className="bg-red-50/50 dark:bg-red-900/10">
+                    <TableCell colSpan={isAuthenticated ? 9 : 8}>
+                      <div className="flex items-center gap-2 py-1">
+                        <Input
+                          placeholder="Add a note about this dispute (optional)..."
+                          value={disputeNotes.get(tx.id) || ""}
+                          onChange={(e) =>
+                            setDisputeNotes((prev) => {
+                              const next = new Map(prev);
+                              next.set(tx.id, e.target.value);
+                              return next;
+                            })
+                          }
+                          className="max-w-md text-sm"
+                        />
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => {
+                            onDecision?.(tx, "dispute", disputeNotes.get(tx.id) || undefined);
+                            setExpandedDispute(null);
+                          }}
+                        >
+                          Submit Dispute
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setExpandedDispute(null)}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </>
             );
           })}
         </TableBody>
