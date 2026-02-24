@@ -1,10 +1,14 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import type { Transaction } from "./transactions";
+import type { TransactionDecision } from "@/hooks/use-decisions";
 import { getCategorySummary } from "./categorize";
 import { detectOvercharges } from "./overcharge-detector";
 
-export function generatePdfReport(transactions: Transaction[]) {
+export function generatePdfReport(
+  transactions: Transaction[],
+  decisions?: Map<string, TransactionDecision>
+) {
   const doc = new jsPDF();
   const categories = getCategorySummary(transactions);
   const alerts = detectOvercharges(transactions);
@@ -96,6 +100,43 @@ export function generatePdfReport(transactions: Transaction[]) {
           else if (val === "MEDIUM") data.cell.styles.textColor = [180, 120, 0];
         }
       },
+    });
+
+    y = (doc as any).lastAutoTable.finalY + 12;
+  }
+
+  // Disputed Transactions Section
+  const disputed = decisions
+    ? transactions.filter((tx) => decisions.get(tx.id)?.decision === "dispute")
+    : [];
+
+  if (disputed.length > 0) {
+    if (y > 240) { doc.addPage(); y = 20; }
+
+    const disputeTotal = disputed.reduce((s, tx) => s + tx.amount, 0);
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(180, 30, 30);
+    doc.text(`${disputed.length} Disputed Transaction${disputed.length !== 1 ? "s" : ""} ($${disputeTotal.toFixed(2)})`, 14, y);
+    doc.setTextColor(0);
+    y += 6;
+
+    autoTable(doc, {
+      startY: y,
+      head: [["Date", "Description", "Amount", "Reason"]],
+      body: disputed.map((tx) => {
+        const note = decisions!.get(tx.id)?.note?.trim() || "(no reason provided)";
+        return [tx.date, tx.description, `$${tx.amount.toFixed(2)}`, note];
+      }),
+      theme: "grid",
+      headStyles: { fillColor: [200, 50, 50], textColor: 255, fontStyle: "bold" },
+      styles: { fontSize: 8, cellPadding: 3 },
+      columnStyles: {
+        0: { cellWidth: 28 },
+        2: { cellWidth: 25, halign: "right" },
+        3: { cellWidth: "auto" },
+      },
+      margin: { left: 14, right: 14 },
     });
 
     y = (doc as any).lastAutoTable.finalY + 12;
