@@ -11,6 +11,11 @@ type Mode = "login" | "signup" | "forgot";
 
 const BETA_CODE = "BETA2026";
 
+const getAppURL = () => {
+  if (window.location.hostname === "localhost") return window.location.origin;
+  return "https://sahstatementchecker.lovable.app";
+};
+
 const Auth = () => {
   const navigate = useNavigate();
   const [mode, setMode] = useState<Mode>("login");
@@ -24,7 +29,7 @@ const Auth = () => {
     try {
       if (mode === "forgot") {
         const { error } = await supabase.auth.resetPasswordForEmail(form.email, {
-          redirectTo: `${window.location.origin}/reset-password`,
+          redirectTo: `${getAppURL()}/reset-password`,
         });
         if (error) throw error;
         setSent(true);
@@ -38,7 +43,7 @@ const Auth = () => {
           password: form.password,
           options: {
             data: { display_name: form.displayName },
-            emailRedirectTo: window.location.origin,
+            emailRedirectTo: getAppURL(),
           },
         });
         if (error) throw error;
