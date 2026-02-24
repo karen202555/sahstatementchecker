@@ -6,9 +6,25 @@ export interface Transaction {
   date: string;
   description: string;
   amount: number;
+  govt_contribution: number | null;
+  client_contribution: number | null;
+  status: string;
   file_name: string | null;
   created_at: string;
   user_id?: string | null;
+}
+
+export async function updateTransactionStatus(transactionId: string, status: string): Promise<void> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  const { error } = await supabase
+    .from('transactions')
+    .update({ status })
+    .eq('id', transactionId)
+    .eq('user_id', user.id);
+
+  if (error) throw error;
 }
 
 export interface StatementFile {

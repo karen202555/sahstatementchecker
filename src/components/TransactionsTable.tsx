@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CheckCircle2, XCircle, HelpCircle, Lightbulb } from "lucide-react";
 import type { Transaction } from "@/lib/transactions";
 import { detectOvercharges } from "@/lib/overcharge-detector";
@@ -56,12 +57,27 @@ const DECISION_STYLES: Record<DecisionType, string> = {
   "not-sure": "border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20",
 };
 
+const STATUS_OPTIONS = [
+  { value: "new", label: "New" },
+  { value: "in-progress", label: "In Progress" },
+  { value: "resolved", label: "Resolved" },
+  { value: "escalated", label: "Escalated" },
+];
+
+const STATUS_COLORS: Record<string, string> = {
+  "new": "bg-muted text-muted-foreground",
+  "in-progress": "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
+  "resolved": "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+  "escalated": "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
+};
+
 interface TransactionsTableProps {
   transactions: Transaction[];
   decisions?: Map<string, TransactionDecision>;
   onDecision?: (tx: Transaction, decision: DecisionType, note?: string) => void;
   getSuggestion?: (tx: Transaction) => MemorySuggestion | null;
   isAuthenticated?: boolean;
+  onStatusUpdate?: (txId: string, status: string) => void;
 }
 
 const TransactionsTable = ({
@@ -70,6 +86,7 @@ const TransactionsTable = ({
   onDecision,
   getSuggestion,
   isAuthenticated = false,
+  onStatusUpdate,
 }: TransactionsTableProps) => {
   const [disputeNotes, setDisputeNotes] = useState<Map<string, string>>(new Map());
   const [expandedDispute, setExpandedDispute] = useState<string | null>(null);
@@ -108,7 +125,6 @@ const TransactionsTable = ({
     if (!onDecision) return;
     if (decision === "dispute") {
       if (expandedDispute === tx.id) {
-        // Submit dispute with note
         onDecision(tx, decision, disputeNotes.get(tx.id) || undefined);
         setExpandedDispute(null);
       } else {
@@ -126,7 +142,7 @@ const TransactionsTable = ({
   };
 
   return (
-    <div className="rounded-xl border border-border bg-card overflow-hidden">
+    <div className="rounded-xl border border-border bg-card overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow className="bg-muted/50">
@@ -138,6 +154,7 @@ const TransactionsTable = ({
             <TableHead className="font-semibold text-base text-right text-primary">Income</TableHead>
             <TableHead className="font-semibold text-base text-right text-destructive">Expense</TableHead>
             <TableHead className="font-semibold text-base w-[120px]">Flag</TableHead>
+            <TableHead className="font-semibold text-base w-[120px]">Status</TableHead>
             {isAuthenticated && (
               <TableHead className="font-semibold text-base w-[200px] no-print">Decision</TableHead>
             )}
@@ -171,8 +188,20 @@ const TransactionsTable = ({
                     </div>
                   </TableCell>
                   <TableCell className="text-base">{tx.description}</TableCell>
-                  <TableCell className="text-right font-mono text-base text-muted-foreground">—</TableCell>
-                  <TableCell className="text-right font-mono text-base text-muted-foreground">—</TableCell>
+                  <TableCell className="text-right font-mono text-base">
+                    {tx.govt_contribution != null ? (
+                      <span className="text-primary">${tx.govt_contribution.toFixed(2)}</span>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right font-mono text-base">
+                    {tx.client_contribution != null ? (
+                      <span>${tx.client_contribution.toFixed(2)}</span>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
                   <TableCell className="text-right font-mono text-base text-primary">
                     {isIncome ? `$${tx.amount.toFixed(2)}` : ""}
                   </TableCell>
@@ -191,6 +220,29 @@ const TransactionsTable = ({
                           Similar charge detected on a nearby date for a similar amount.
                         </TooltipContent>
                       </Tooltip>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {isAuthenticated && onStatusUpdate ? (
+                      <Select
+                        value={tx.status || "new"}
+                        onValueChange={(val) => onStatusUpdate(tx.id, val)}
+                      >
+                        <SelectTrigger className="h-7 text-xs w-[110px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {STATUS_OPTIONS.map((opt) => (
+                            <SelectItem key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Badge className={`text-xs ${STATUS_COLORS[tx.status || "new"] || STATUS_COLORS["new"]}`}>
+                        {STATUS_OPTIONS.find((o) => o.value === (tx.status || "new"))?.label || "New"}
+                      </Badge>
                     )}
                   </TableCell>
                   {isAuthenticated && (
@@ -279,10 +331,9 @@ const TransactionsTable = ({
                     </TableCell>
                   )}
                 </TableRow>
-                {/* Dispute note expansion row */}
                 {expandedDispute === tx.id && (
                   <TableRow key={`${tx.id}-note`} className="bg-red-50/50 dark:bg-red-900/10">
-                    <TableCell colSpan={isAuthenticated ? 9 : 8}>
+                    <TableCell colSpan={isAuthenticated ? 10 : 9}>
                       <div className="flex items-center gap-2 py-1">
                         <Input
                           placeholder="Add a note about this dispute (optional)..."

@@ -128,32 +128,41 @@ export type Database = {
       transactions: {
         Row: {
           amount: number
+          client_contribution: number | null
           created_at: string
           date: string
           description: string
           file_name: string | null
+          govt_contribution: number | null
           id: string
           session_id: string
+          status: string
           user_id: string | null
         }
         Insert: {
           amount: number
+          client_contribution?: number | null
           created_at?: string
           date: string
           description: string
           file_name?: string | null
+          govt_contribution?: number | null
           id?: string
           session_id: string
+          status?: string
           user_id?: string | null
         }
         Update: {
           amount?: number
+          client_contribution?: number | null
           created_at?: string
           date?: string
           description?: string
           file_name?: string | null
+          govt_contribution?: number | null
           id?: string
           session_id?: string
+          status?: string
           user_id?: string | null
         }
         Relationships: []
