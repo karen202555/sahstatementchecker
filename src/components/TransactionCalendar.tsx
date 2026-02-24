@@ -32,21 +32,54 @@ interface TransactionCalendarProps {
 type ViewMode = "month" | "week" | "day";
 
 const CATEGORY_COLORS: Record<string, string> = {
-  "Income": "bg-green-200 text-green-900 dark:bg-green-800/40 dark:text-green-200",
-  "Meals & Food": "bg-orange-200 text-orange-900 dark:bg-orange-800/40 dark:text-orange-200",
-  "Housing & Accommodation": "bg-blue-200 text-blue-900 dark:bg-blue-800/40 dark:text-blue-200",
-  "Domestic": "bg-blue-100 text-blue-800 dark:bg-blue-700/40 dark:text-blue-200",
-  "Transport": "bg-purple-200 text-purple-900 dark:bg-purple-800/40 dark:text-purple-200",
-  "Personal Care": "bg-sky-200 text-sky-900 dark:bg-sky-800/40 dark:text-sky-200",
-  "Health & Medical": "bg-teal-200 text-teal-900 dark:bg-teal-800/40 dark:text-teal-200",
-  "Allied Health": "bg-pink-100 text-pink-800 dark:bg-pink-700/40 dark:text-pink-200",
-  "Nursing": "bg-amber-200 text-amber-900 dark:bg-amber-800/40 dark:text-amber-200",
-  "Community & Social": "bg-teal-200 text-teal-900 dark:bg-teal-800/40 dark:text-teal-200",
-  "Support Worker": "bg-indigo-200 text-indigo-900 dark:bg-indigo-800/40 dark:text-indigo-200",
-  "Fees & Admin": "bg-yellow-200 text-yellow-900 dark:bg-yellow-800/40 dark:text-yellow-200",
-  "Equipment & Supplies": "bg-violet-200 text-violet-900 dark:bg-violet-800/40 dark:text-violet-200",
-  "Other": "bg-gray-200 text-gray-900 dark:bg-gray-700/40 dark:text-gray-200",
+  "Income": "hsl(140, 70%, 40%)",
+  "Meals": "hsl(35, 85%, 55%)",
+  "Housing & Accommodation": "hsl(220, 70%, 55%)",
+  "Domestic": "hsl(220, 60%, 50%)",
+  "Transport": "hsl(270, 60%, 55%)",
+  "Personal Care": "hsl(190, 70%, 45%)",
+  "Health & Medical": "hsl(175, 60%, 40%)",
+  "Allied Health": "hsl(310, 50%, 50%)",
+  "Nursing": "hsl(25, 70%, 50%)",
+  "Community & Social": "hsl(140, 60%, 45%)",
+  "Support Worker": "hsl(200, 70%, 50%)",
+  "Fees & Admin": "hsl(45, 80%, 50%)",
+  "Equipment & Supplies": "hsl(310, 50%, 50%)",
+  "Other": "hsl(215, 14%, 50%)",
 };
+
+/** Truncate descriptions to short logical terms */
+function truncateDescription(desc: string): string {
+  const lower = desc.toLowerCase();
+  const mapping: [string[], string][] = [
+    [["domestic"], "Domestic"],
+    [["nursing", "nurse"], "Nursing"],
+    [["meal", "food", "lunch", "dinner", "breakfast", "catering"], "Meals"],
+    [["allied health", "dietician", "podiatry", "physio", "occupational", "speech", "psychology"], "Allied Health"],
+    [["transport", "taxi", "uber", "bus", "train"], "Transport"],
+    [["personal care", "hygiene", "grooming"], "Personal Care"],
+    [["housing", "accommodation", "rent", "sil", "supported independent"], "Housing"],
+    [["medical", "health", "doctor", "hospital", "dental"], "Health"],
+    [["community", "social", "activity", "recreation"], "Community"],
+    [["support worker", "support staff", "carer", "attendant"], "Support Worker"],
+    [["fee", "admin", "management", "plan management"], "Fees"],
+    [["equipment", "supplies", "assistive", "wheelchair"], "Equipment"],
+    [["income", "payment received", "deposit", "credit", "funding"], "Income"],
+  ];
+  for (const [keywords, label] of mapping) {
+    if (keywords.some((kw) => lower.includes(kw))) return label;
+  }
+  // Fallback: first two words
+  const words = desc.split(/\s+/);
+  return words.slice(0, 2).join(" ");
+}
+
+/** Format amount: no minus, drop .00 */
+function formatAmount(amount: number): string {
+  const abs = Math.abs(amount);
+  if (abs % 1 === 0) return `$${abs}`;
+  return `$${abs.toFixed(2)}`;
+}
 
 function parseDate(dateStr: string): Date | null {
   const formats = [
@@ -71,7 +104,6 @@ const TransactionCalendar = ({ transactions }: TransactionCalendarProps) => {
     const ids = new Set<string>();
     for (const alert of alerts) {
       if (alert.type === "duplicate") {
-        // Only flag the second transaction in a duplicate pair
         for (let i = 1; i < alert.transactions.length; i++) {
           ids.add(alert.transactions[i].id);
         }
@@ -80,7 +112,6 @@ const TransactionCalendar = ({ transactions }: TransactionCalendarProps) => {
     return ids;
   }, [transactions]);
 
-  // Find the month with the most transactions to use as initial
   const initialDate = useMemo(() => {
     const monthCounts = new Map<string, { count: number; date: Date }>();
     for (const tx of transactions) {
@@ -88,19 +119,13 @@ const TransactionCalendar = ({ transactions }: TransactionCalendarProps) => {
       if (!d) continue;
       const key = format(d, "yyyy-MM");
       const entry = monthCounts.get(key);
-      if (entry) {
-        entry.count++;
-      } else {
-        monthCounts.set(key, { count: 1, date: d });
-      }
+      if (entry) entry.count++;
+      else monthCounts.set(key, { count: 1, date: d });
     }
     let best: Date = new Date();
     let bestCount = 0;
     for (const [, { count, date }] of monthCounts) {
-      if (count > bestCount) {
-        bestCount = count;
-        best = date;
-      }
+      if (count > bestCount) { bestCount = count; best = date; }
     }
     return best;
   }, [transactions]);
@@ -108,10 +133,7 @@ const TransactionCalendar = ({ transactions }: TransactionCalendarProps) => {
   const [currentDate, setCurrentDate] = useState<Date>(initialDate);
   const [viewMode, setViewMode] = useState<ViewMode>("month");
 
-  // Re-sync when transactions change (new upload)
-  useEffect(() => {
-    setCurrentDate(initialDate);
-  }, [initialDate]);
+  useEffect(() => { setCurrentDate(initialDate); }, [initialDate]);
 
   const txByDate = useMemo(() => {
     const map = new Map<string, Transaction[]>();
@@ -125,24 +147,6 @@ const TransactionCalendar = ({ transactions }: TransactionCalendarProps) => {
     return map;
   }, [transactions]);
 
-  // Build dynamic legend from actual transaction categories
-  const CATEGORY_DOT_COLORS: Record<string, string> = {
-    "Income": "hsl(140, 70%, 40%)",
-    "Meals & Food": "hsl(35, 85%, 55%)",
-    "Housing & Accommodation": "hsl(220, 70%, 55%)",
-    "Domestic": "hsl(220, 70%, 55%)",
-    "Transport": "hsl(270, 60%, 55%)",
-    "Health & Medical": "hsl(175, 60%, 40%)",
-    "Allied Health": "hsl(310, 50%, 50%)",
-    "Nursing": "hsl(25, 70%, 50%)",
-    "Personal Care": "hsl(190, 70%, 45%)",
-    "Community & Social": "hsl(140, 60%, 45%)",
-    "Support Worker": "hsl(200, 70%, 50%)",
-    "Fees & Admin": "hsl(45, 80%, 50%)",
-    "Equipment & Supplies": "hsl(310, 50%, 50%)",
-    "Other": "hsl(215, 14%, 50%)",
-  };
-
   const legendItems = useMemo(() => {
     const seen = new Set<string>();
     for (const tx of transactions) {
@@ -152,7 +156,7 @@ const TransactionCalendar = ({ transactions }: TransactionCalendarProps) => {
     }
     return Array.from(seen).map((cat) => ({
       label: cat,
-      color: CATEGORY_DOT_COLORS[cat] || "hsl(215, 14%, 50%)",
+      color: CATEGORY_COLORS[cat] || "hsl(215, 14%, 50%)",
     }));
   }, [transactions]);
 
@@ -183,55 +187,69 @@ const TransactionCalendar = ({ transactions }: TransactionCalendarProps) => {
   }, [currentDate]);
 
   const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  const MAX_VISIBLE = 3;
 
   const renderDayCell = (day: Date, tall: boolean) => {
     const key = format(day, "yyyy-MM-dd");
     const dayTx = txByDate.get(key) || [];
     const outsideMonth = viewMode === "month" && !isSameMonth(day, currentDate);
     const today = isToday(day);
+    const count = dayTx.length;
 
     return (
       <div
         key={key}
-        className={`border border-border p-1.5 flex flex-col ${tall ? "min-h-[180px]" : "min-h-[100px]"} ${outsideMonth ? "bg-muted/30" : "bg-card"} ${today ? "ring-2 ring-primary ring-inset" : ""}`}
+        className={`border border-border p-1 flex flex-col ${tall ? "min-h-[180px]" : "min-h-[90px]"} ${outsideMonth ? "bg-muted/30" : "bg-card"} ${today ? "ring-2 ring-primary ring-inset" : ""}`}
       >
         <span
-          className={`text-sm font-medium mb-1 self-end rounded-full w-7 h-7 flex items-center justify-center ${today ? "bg-primary text-primary-foreground" : outsideMonth ? "text-muted-foreground" : "text-foreground"}`}
+          className={`text-[11px] font-medium mb-0.5 self-end rounded-full w-6 h-6 flex items-center justify-center ${today ? "bg-primary text-primary-foreground" : outsideMonth ? "text-muted-foreground" : "text-foreground"}`}
         >
           {format(day, "d")}
         </span>
-        <div className="flex-1 space-y-0.5 overflow-hidden">
-          {dayTx.slice(0, tall ? 6 : MAX_VISIBLE).map((tx) => {
-            const isFlagged = flaggedIds.has(tx.id);
-            const isIncome = tx.amount >= 0 || categorizeTransaction(tx.description).category === "Income";
-            const { category } = categorizeTransaction(tx.description);
-            const colorClass = isFlagged
-              ? "bg-destructive/20 text-destructive ring-1 ring-destructive/30"
-              : isIncome
-                ? CATEGORY_COLORS["Income"]
-                : CATEGORY_COLORS[category] || CATEGORY_COLORS["Other"];
+        {count > 0 && (
+          <div className={`flex-1 flex flex-col gap-px overflow-hidden`}>
+            {dayTx.map((tx) => {
+              const isFlagged = flaggedIds.has(tx.id);
+              const { category } = categorizeTransaction(tx.description);
+              const catColor = CATEGORY_COLORS[category] || CATEGORY_COLORS["Other"];
+              const label = truncateDescription(tx.description);
+              const amt = formatAmount(tx.amount);
 
-            return (
-              <div
-                key={tx.id}
-                className={`text-xs leading-tight rounded px-1 py-0.5 truncate ${colorClass}`}
-                title={isFlagged ? "⚑ Possible Duplicate" : `${category}: ${tx.description}`}
-              >
-                <span className="font-mono mr-1">
-                  {tx.amount < 0 ? "-" : "+"}${Math.abs(tx.amount).toFixed(2)}
-                </span>
-                <span className="opacity-80">{tx.description}</span>
-                {isFlagged && <span className="ml-1 font-semibold">⚑</span>}
-              </div>
-            );
-          })}
-          {dayTx.length > (tall ? 6 : MAX_VISIBLE) && (
-            <span className="text-xs text-muted-foreground pl-1">
-              +{dayTx.length - (tall ? 6 : MAX_VISIBLE)} more
-            </span>
-          )}
-        </div>
+              return (
+                <div
+                  key={tx.id}
+                  className={`flex items-center justify-between gap-1 px-1.5 overflow-hidden ${isFlagged ? "ring-1 ring-destructive/40" : ""}`}
+                  style={{
+                    backgroundColor: isFlagged ? "hsl(0, 80%, 95%)" : `${catColor}20`,
+                    borderRadius: "8px",
+                    minHeight: count <= 2 ? "28px" : count <= 4 ? "22px" : "18px",
+                    flex: "1 1 0",
+                  }}
+                  title={`${category}: ${tx.description} — ${amt}`}
+                >
+                  <span
+                    className="truncate font-medium"
+                    style={{
+                      color: isFlagged ? "hsl(0, 70%, 40%)" : catColor,
+                      fontSize: count <= 2 ? "11px" : count <= 4 ? "10px" : "9px",
+                    }}
+                  >
+                    {label}
+                    {isFlagged && " ⚑"}
+                  </span>
+                  <span
+                    className="shrink-0 font-mono font-medium"
+                    style={{
+                      fontSize: count <= 2 ? "11px" : count <= 4 ? "10px" : "9px",
+                      color: isFlagged ? "hsl(0, 70%, 40%)" : catColor,
+                    }}
+                  >
+                    {amt}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     );
   };
@@ -255,7 +273,7 @@ const TransactionCalendar = ({ transactions }: TransactionCalendarProps) => {
                   )}
                 </div>
                 <Badge variant={tx.amount < 0 ? "destructive" : "default"} className="font-mono shrink-0 ml-3 text-base">
-                  {tx.amount < 0 ? "-" : "+"}${Math.abs(tx.amount).toFixed(2)}
+                  {formatAmount(tx.amount)}
                 </Badge>
               </div>
             );
@@ -276,17 +294,17 @@ const TransactionCalendar = ({ transactions }: TransactionCalendarProps) => {
           <Button variant="outline" size="icon" onClick={() => navigate("next")}>
             <ChevronRight className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="sm" onClick={() => setCurrentDate(new Date())} className="text-base">
+          <Button variant="ghost" size="sm" onClick={() => setCurrentDate(new Date())} className="text-[14px]">
             Today
           </Button>
-          <h2 className="text-xl font-semibold text-foreground ml-2">{headerLabel}</h2>
+          <h2 className="text-lg font-semibold text-foreground ml-2">{headerLabel}</h2>
         </div>
         <div className="flex rounded-lg border border-border overflow-hidden">
           {(["month", "week", "day"] as ViewMode[]).map((mode) => (
             <button
               key={mode}
               onClick={() => setViewMode(mode)}
-              className={`px-3 py-1.5 text-base capitalize transition-colors ${viewMode === mode ? "bg-primary text-primary-foreground" : "bg-card text-foreground hover:bg-accent"}`}
+              className={`px-3 py-1 text-[13px] font-medium capitalize transition-colors ${viewMode === mode ? "bg-primary text-primary-foreground" : "bg-card text-foreground hover:bg-accent"}`}
             >
               {mode}
             </button>
@@ -306,7 +324,7 @@ const TransactionCalendar = ({ transactions }: TransactionCalendarProps) => {
         <div className="rounded-xl border border-border overflow-hidden">
           <div className="grid grid-cols-7 bg-muted">
             {DAY_NAMES.map((name) => (
-              <div key={name} className="text-center text-sm font-medium text-muted-foreground py-2 border-b border-border">
+              <div key={name} className="text-center text-[12px] font-semibold text-muted-foreground py-1.5 border-b border-border">
                 {name}
               </div>
             ))}
@@ -320,15 +338,15 @@ const TransactionCalendar = ({ transactions }: TransactionCalendarProps) => {
       )}
 
       {/* Category legend */}
-      <div className="flex flex-wrap gap-2 text-sm no-print">
+      <div className="flex flex-wrap gap-2 text-[12px] no-print">
         <span className="text-muted-foreground font-medium mr-1">Legend:</span>
         {legendItems.map((item) => (
           <span key={item.label} className="inline-flex items-center gap-1">
-            <span className="h-3 w-3 rounded-full" style={{ backgroundColor: item.color }} />
+            <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
             {item.label}
           </span>
         ))}
-        <span className="inline-flex items-center gap-1"><span className="h-3 w-3 rounded-full bg-destructive" /> Potential Issue</span>
+        <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-destructive" /> Potential Issue</span>
       </div>
     </div>
   );
