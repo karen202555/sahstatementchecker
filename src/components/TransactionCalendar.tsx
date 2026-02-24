@@ -32,11 +32,15 @@ interface TransactionCalendarProps {
 type ViewMode = "month" | "week" | "day";
 
 const CATEGORY_COLORS: Record<string, string> = {
+  "Income": "bg-green-200 text-green-900 dark:bg-green-800/40 dark:text-green-200",
   "Meals & Food": "bg-orange-200 text-orange-900 dark:bg-orange-800/40 dark:text-orange-200",
   "Housing & Accommodation": "bg-blue-200 text-blue-900 dark:bg-blue-800/40 dark:text-blue-200",
+  "Domestic": "bg-blue-100 text-blue-800 dark:bg-blue-700/40 dark:text-blue-200",
   "Transport": "bg-purple-200 text-purple-900 dark:bg-purple-800/40 dark:text-purple-200",
   "Personal Care": "bg-sky-200 text-sky-900 dark:bg-sky-800/40 dark:text-sky-200",
   "Health & Medical": "bg-pink-200 text-pink-900 dark:bg-pink-800/40 dark:text-pink-200",
+  "Allied Health": "bg-pink-100 text-pink-800 dark:bg-pink-700/40 dark:text-pink-200",
+  "Nursing": "bg-rose-200 text-rose-900 dark:bg-rose-800/40 dark:text-rose-200",
   "Community & Social": "bg-teal-200 text-teal-900 dark:bg-teal-800/40 dark:text-teal-200",
   "Support Worker": "bg-indigo-200 text-indigo-900 dark:bg-indigo-800/40 dark:text-indigo-200",
   "Fees & Admin": "bg-yellow-200 text-yellow-900 dark:bg-yellow-800/40 dark:text-yellow-200",
@@ -121,6 +125,37 @@ const TransactionCalendar = ({ transactions }: TransactionCalendarProps) => {
     return map;
   }, [transactions]);
 
+  // Build dynamic legend from actual transaction categories
+  const CATEGORY_DOT_COLORS: Record<string, string> = {
+    "Income": "hsl(140, 70%, 40%)",
+    "Meals & Food": "hsl(35, 85%, 55%)",
+    "Housing & Accommodation": "hsl(220, 70%, 55%)",
+    "Domestic": "hsl(220, 70%, 55%)",
+    "Transport": "hsl(270, 60%, 55%)",
+    "Health & Medical": "hsl(340, 65%, 50%)",
+    "Allied Health": "hsl(310, 50%, 50%)",
+    "Nursing": "hsl(340, 65%, 50%)",
+    "Personal Care": "hsl(190, 70%, 45%)",
+    "Community & Social": "hsl(140, 60%, 45%)",
+    "Support Worker": "hsl(200, 70%, 50%)",
+    "Fees & Admin": "hsl(45, 80%, 50%)",
+    "Equipment & Supplies": "hsl(310, 50%, 50%)",
+    "Other": "hsl(215, 14%, 50%)",
+  };
+
+  const legendItems = useMemo(() => {
+    const seen = new Set<string>();
+    for (const tx of transactions) {
+      const { category } = categorizeTransaction(tx.description);
+      seen.add(category);
+      if (tx.amount >= 0) seen.add("Income");
+    }
+    return Array.from(seen).map((cat) => ({
+      label: cat,
+      color: CATEGORY_DOT_COLORS[cat] || "hsl(215, 14%, 50%)",
+    }));
+  }, [transactions]);
+
   const navigate = (direction: "prev" | "next") => {
     const fn = direction === "next"
       ? viewMode === "month" ? addMonths : viewMode === "week" ? addWeeks : addDays
@@ -169,12 +204,12 @@ const TransactionCalendar = ({ transactions }: TransactionCalendarProps) => {
         <div className="flex-1 space-y-0.5 overflow-hidden">
           {dayTx.slice(0, tall ? 6 : MAX_VISIBLE).map((tx) => {
             const isFlagged = flaggedIds.has(tx.id);
-            const isIncome = tx.amount >= 0;
+            const isIncome = tx.amount >= 0 || categorizeTransaction(tx.description).category === "Income";
             const { category } = categorizeTransaction(tx.description);
             const colorClass = isFlagged
               ? "bg-destructive/20 text-destructive ring-1 ring-destructive/30"
               : isIncome
-                ? "bg-green-200 text-green-900 dark:bg-green-800/40 dark:text-green-200"
+                ? CATEGORY_COLORS["Income"]
                 : CATEGORY_COLORS[category] || CATEGORY_COLORS["Other"];
 
             return (
@@ -287,10 +322,12 @@ const TransactionCalendar = ({ transactions }: TransactionCalendarProps) => {
       {/* Category legend */}
       <div className="flex flex-wrap gap-2 text-sm no-print">
         <span className="text-muted-foreground font-medium mr-1">Legend:</span>
-        <span className="inline-flex items-center gap-1"><span className="h-3 w-3 rounded-full bg-green-500" /> Income</span>
-        <span className="inline-flex items-center gap-1"><span className="h-3 w-3 rounded-full bg-orange-500" /> Meals</span>
-        <span className="inline-flex items-center gap-1"><span className="h-3 w-3 rounded-full bg-blue-500" /> Housing</span>
-        <span className="inline-flex items-center gap-1"><span className="h-3 w-3 rounded-full bg-purple-500" /> Transport</span>
+        {legendItems.map((item) => (
+          <span key={item.label} className="inline-flex items-center gap-1">
+            <span className="h-3 w-3 rounded-full" style={{ backgroundColor: item.color }} />
+            {item.label}
+          </span>
+        ))}
         <span className="inline-flex items-center gap-1"><span className="h-3 w-3 rounded-full bg-destructive" /> Potential Issue</span>
       </div>
     </div>
