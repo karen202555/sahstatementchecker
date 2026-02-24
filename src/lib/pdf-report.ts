@@ -2,14 +2,14 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import type { Transaction } from "./transactions";
 import type { TransactionDecision } from "@/hooks/use-decisions";
-import { getCategorySummary } from "./categorize";
+import { getCategorySummary, categorizeTransaction } from "./categorize";
 import { detectOvercharges } from "./overcharge-detector";
 
 export function generatePdfReport(
   transactions: Transaction[],
   decisions?: Map<string, TransactionDecision>
 ) {
-  const doc = new jsPDF();
+  const doc = new jsPDF({ orientation: "landscape" });
   const categories = getCategorySummary(transactions);
   const alerts = detectOvercharges(transactions);
   const grandTotal = categories.reduce((sum, c) => sum + c.total, 0);
@@ -35,7 +35,7 @@ export function generatePdfReport(
 
   // Divider
   doc.setDrawColor(200);
-  doc.line(14, y, 196, y);
+  doc.line(14, y, 280, y);
   y += 8;
 
   // Category Summary
@@ -65,7 +65,7 @@ export function generatePdfReport(
 
   // Alerts Section
   if (alerts.length > 0) {
-    if (y > 240) { doc.addPage(); y = 20; }
+    if (y > 170) { doc.addPage(); y = 20; }
 
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
@@ -111,9 +111,9 @@ export function generatePdfReport(
     : [];
 
   if (disputed.length > 0) {
-    if (y > 240) { doc.addPage(); y = 20; }
+    if (y > 170) { doc.addPage(); y = 20; }
 
-    const disputeTotal = disputed.reduce((s, tx) => s + tx.amount, 0);
+    const disputeTotal = disputed.reduce((s, tx) => s + Math.abs(tx.amount), 0);
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(180, 30, 30);
@@ -123,18 +123,22 @@ export function generatePdfReport(
 
     autoTable(doc, {
       startY: y,
-      head: [["Date", "Description", "Amount", "Reason"]],
-      body: disputed.map((tx) => {
+      head: [["Ref", "Date", "Category", "Description", "Amount", "Reason"]],
+      body: disputed.map((tx, i) => {
         const note = decisions!.get(tx.id)?.note?.trim() || "(no reason provided)";
-        return [tx.date, tx.description, `$${tx.amount.toFixed(2)}`, note];
+        const { category } = categorizeTransaction(tx.description);
+        const ref = `D-${String(i + 1).padStart(3, "0")}`;
+        return [ref, formatDateForPdf(tx.date), category, tx.description, `$${Math.abs(tx.amount).toFixed(2)}`, note];
       }),
       theme: "grid",
       headStyles: { fillColor: [200, 50, 50], textColor: 255, fontStyle: "bold" },
       styles: { fontSize: 8, cellPadding: 3 },
       columnStyles: {
-        0: { cellWidth: 28 },
-        2: { cellWidth: 25, halign: "right" },
-        3: { cellWidth: "auto" },
+        0: { cellWidth: 18 },
+        1: { cellWidth: 22 },
+        2: { cellWidth: 30 },
+        4: { cellWidth: 22, halign: "right" },
+        5: { cellWidth: "auto" },
       },
       margin: { left: 14, right: 14 },
     });
@@ -142,8 +146,8 @@ export function generatePdfReport(
     y = (doc as any).lastAutoTable.finalY + 12;
   }
 
-  // All Transactions
-  if (y > 240) { doc.addPage(); y = 20; }
+  // All Transactions — full columns
+  if (y > 170) { doc.addPage(); y = 20; }
 
   doc.setFontSize(14);
   doc.setFont("helvetica", "bold");
@@ -153,18 +157,32 @@ export function generatePdfReport(
 
   autoTable(doc, {
     startY: y,
-    head: [["Date", "Description", "Amount"]],
-    body: transactions.map((tx) => [
-      tx.date,
-      tx.description,
-      `$${tx.amount.toFixed(2)}`,
-    ]),
+    head: [["Date", "Category", "Description", "Govt. Contribution", "Client Contribution", "Income", "Expense", "Status"]],
+    body: transactions.map((tx) => {
+      const { category } = categorizeTransaction(tx.description);
+      const isIncome = tx.amount >= 0;
+      return [
+        formatDateForPdf(tx.date),
+        category,
+        tx.description,
+        tx.govt_contribution != null ? `$${tx.govt_contribution.toFixed(2)}` : "—",
+        tx.client_contribution != null ? `$${tx.client_contribution.toFixed(2)}` : "—",
+        isIncome ? `$${tx.amount.toFixed(2)}` : "",
+        !isIncome ? `$${Math.abs(tx.amount).toFixed(2)}` : "",
+        tx.status || "new",
+      ];
+    }),
     theme: "striped",
     headStyles: { fillColor: [39, 157, 130], textColor: 255, fontStyle: "bold" },
-    styles: { fontSize: 8, cellPadding: 2.5 },
+    styles: { fontSize: 7, cellPadding: 2 },
     columnStyles: {
-      0: { cellWidth: 28 },
-      2: { cellWidth: 25, halign: "right" },
+      0: { cellWidth: 22 },
+      1: { cellWidth: 28 },
+      3: { cellWidth: 25, halign: "right" },
+      4: { cellWidth: 25, halign: "right" },
+      5: { cellWidth: 22, halign: "right" },
+      6: { cellWidth: 22, halign: "right" },
+      7: { cellWidth: 20 },
     },
     margin: { left: 14, right: 14 },
   });
@@ -175,8 +193,14 @@ export function generatePdfReport(
     doc.setPage(i);
     doc.setFontSize(8);
     doc.setTextColor(150);
-    doc.text(`Statement Checker · Page ${i} of ${pageCount}`, 14, 290);
+    doc.text(`Statement Checker · Page ${i} of ${pageCount}`, 14, 200);
   }
 
   doc.save("statement-report.pdf");
+}
+
+function formatDateForPdf(dateStr: string): string {
+  const parts = dateStr.split("-");
+  if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  return dateStr;
 }

@@ -1,17 +1,21 @@
 import type { Transaction } from "./transactions";
 import type { TransactionDecision } from "@/hooks/use-decisions";
+import { categorizeTransaction } from "./categorize";
+
+function formatDateDDMMYYYY(dateStr: string): string {
+  const parts = dateStr.split("-");
+  if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  return dateStr;
+}
 
 export function generateDisputeReport(
   transactions: Transaction[],
   decisions: Map<string, TransactionDecision>
 ): string {
-  const disputed = transactions.filter(
-    (tx) => decisions.get(tx.id)?.decision === "dispute"
-  );
-
+  const disputed = getDisputedTransactions(transactions, decisions);
   if (disputed.length === 0) return "";
 
-  const totalAmount = disputed.reduce((sum, tx) => sum + tx.amount, 0);
+  const totalAmount = disputed.reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
   const today = new Date().toLocaleDateString("en-AU", {
     day: "numeric",
     month: "long",
@@ -25,19 +29,25 @@ export function generateDisputeReport(
     `Total disputed items: ${disputed.length}`,
     `Total disputed amount: $${totalAmount.toFixed(2)}`,
     "",
-    "-----------------------------------------",
+    "Ref       | Date       | Category              | Description                              | Amount     | Reason",
+    "----------|------------|-----------------------|------------------------------------------|------------|---------------------------",
   ];
 
   disputed.forEach((tx, i) => {
     const decision = decisions.get(tx.id);
     const reason = decision?.note?.trim() || "(no reason provided)";
-    lines.push(`${i + 1}. Date: ${tx.date}`);
-    lines.push(`   Description: ${tx.description}`);
-    lines.push(`   Amount: $${tx.amount.toFixed(2)}`);
-    lines.push(`   Reason: ${reason}`);
-    if (i < disputed.length - 1) lines.push("");
+    const { category } = categorizeTransaction(tx.description);
+    const ref = `D-${String(i + 1).padStart(3, "0")}`;
+    const date = formatDateDDMMYYYY(tx.date);
+    const desc = tx.description.length > 40 ? tx.description.substring(0, 37) + "..." : tx.description;
+    const amount = `$${Math.abs(tx.amount).toFixed(2)}`;
+
+    lines.push(
+      `${ref.padEnd(10)}| ${date.padEnd(11)}| ${category.padEnd(22)}| ${desc.padEnd(41)}| ${amount.padEnd(11)}| ${reason}`
+    );
   });
 
+  lines.push("");
   lines.push("-----------------------------------------");
   lines.push("");
   lines.push("Please review and respond to the above");
