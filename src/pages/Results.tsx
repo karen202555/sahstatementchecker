@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Table as TableIcon, CalendarDays, Download, Printer, PieChart, ShieldAlert, Share2, FileDown, Eraser, AlertTriangle, Copy, Mail } from "lucide-react";
+import { ArrowLeft, Table as TableIcon, CalendarDays, Download, Printer, PieChart, ShieldAlert, Share2, FileDown, Eraser, AlertTriangle, Copy, Mail, FileText } from "lucide-react";
 import Header from "@/components/Header";
 import TransactionsTable from "@/components/TransactionsTable";
 import TransactionCalendar from "@/components/TransactionCalendar";
@@ -8,6 +8,7 @@ import SpendingSummary from "@/components/SpendingSummary";
 import OverchargeAlerts from "@/components/OverchargeAlerts";
 import IssueSummary from "@/components/IssueSummary";
 import BetaFeedback from "@/components/BetaFeedback";
+import SAHStatement from "@/components/SAHStatement";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -221,6 +222,10 @@ const Results = () => {
                   <ShieldAlert className="h-4 w-4 opacity-70" />
                   Alerts
                 </TabsTrigger>
+                <TabsTrigger value="sah" className="gap-1.5 text-[14px] font-medium h-8 px-3 rounded-md data-[state=active]:bg-card data-[state=active]:shadow-sm">
+                  <FileText className="h-4 w-4 opacity-70" />
+                  SAH
+                </TabsTrigger>
               </TabsList>
               <TabsContent value="table">
                 <TransactionsTable
@@ -240,6 +245,9 @@ const Results = () => {
               </TabsContent>
               <TabsContent value="alerts">
                 <OverchargeAlerts transactions={transactions} />
+              </TabsContent>
+              <TabsContent value="sah">
+                <SAHStatement transactions={transactions} />
               </TabsContent>
             </Tabs>
 
