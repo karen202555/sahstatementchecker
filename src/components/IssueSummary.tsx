@@ -1,5 +1,4 @@
 import { AlertTriangle, Copy, DollarSign, Activity } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import type { Transaction } from "@/lib/transactions";
 import { detectOvercharges, getAlertSummary } from "@/lib/overcharge-detector";
 
@@ -11,42 +10,23 @@ const IssueSummary = ({ transactions }: Props) => {
   const alerts = detectOvercharges(transactions);
   const summary = getAlertSummary(alerts);
 
+  const items = [
+    { icon: Activity, label: "Transactions", value: transactions.length, color: "text-foreground" },
+    { icon: Copy, label: "Possible Duplicates", value: summary.duplicates, color: summary.duplicates > 0 ? "text-destructive" : "text-foreground" },
+    { icon: AlertTriangle, label: "Possible Anomalies", value: summary.anomalies, color: summary.anomalies > 0 ? "text-destructive" : "text-foreground" },
+    { icon: DollarSign, label: "Fee Issues", value: summary.feeIssues, color: summary.feeIssues > 0 ? "text-destructive" : "text-foreground" },
+  ];
+
   return (
-    <Card className="border-border">
-      <CardContent className="p-4">
-        <h3 className="text-base font-semibold text-foreground mb-3">Statement Summary</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="flex items-center gap-2">
-            <Activity className="h-5 w-5 text-muted-foreground" />
-            <div>
-              <p className="text-xl font-bold text-foreground">{transactions.length}</p>
-              <p className="text-sm text-muted-foreground">Transactions</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Copy className="h-5 w-5 text-destructive" />
-            <div>
-              <p className="text-xl font-bold text-foreground">{summary.duplicates}</p>
-              <p className="text-sm text-muted-foreground">Possible duplicates</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-destructive" />
-            <div>
-              <p className="text-xl font-bold text-foreground">{summary.anomalies}</p>
-              <p className="text-sm text-muted-foreground">Possible anomalies</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <DollarSign className="h-5 w-5 text-destructive" />
-            <div>
-              <p className="text-xl font-bold text-foreground">{summary.feeIssues}</p>
-              <p className="text-sm text-muted-foreground">Fee issues</p>
-            </div>
-          </div>
+    <div className="flex items-center h-14 rounded-[10px] border border-border bg-card px-4 divide-x divide-border">
+      {items.map((item) => (
+        <div key={item.label} className="flex items-center gap-2 px-4 first:pl-0 last:pr-0">
+          <item.icon className={`h-4 w-4 opacity-70 ${item.color}`} />
+          <span className={`text-[16px] font-semibold tabular-nums ${item.color}`}>{item.value}</span>
+          <span className="text-[14px] font-medium text-muted-foreground whitespace-nowrap">{item.label}</span>
         </div>
-      </CardContent>
-    </Card>
+      ))}
+    </div>
   );
 };
 

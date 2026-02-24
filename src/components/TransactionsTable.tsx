@@ -13,48 +13,46 @@ import type { DecisionType, MemorySuggestion, TransactionDecision } from "@/hook
 
 function formatDateDDMMYYYY(dateStr: string): string {
   const parts = dateStr.split("-");
-  if (parts.length === 3) {
-    return `${parts[2]}/${parts[1]}/${parts[0]}`;
-  }
+  if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
   return dateStr;
 }
 
 const CATEGORY_BG: Record<string, string> = {
-  "Meals & Food": "bg-orange-100 dark:bg-orange-900/30",
-  "Nursing": "bg-pink-100 dark:bg-pink-900/30",
-  "Domestic": "bg-blue-100 dark:bg-blue-900/30",
-  "Allied Health": "bg-violet-100 dark:bg-violet-900/30",
-  "Transport": "bg-purple-100 dark:bg-purple-900/30",
-  "Personal Care": "bg-sky-100 dark:bg-sky-900/30",
-  "Housing & Accommodation": "bg-indigo-100 dark:bg-indigo-900/30",
-  "Health & Medical": "bg-rose-100 dark:bg-rose-900/30",
-  "Community & Social": "bg-teal-100 dark:bg-teal-900/30",
-  "Support Worker": "bg-cyan-100 dark:bg-cyan-900/30",
-  "Fees & Admin": "bg-yellow-100 dark:bg-yellow-900/30",
-  "Equipment & Supplies": "bg-amber-100 dark:bg-amber-900/30",
+  "Meals & Food": "bg-orange-50 dark:bg-orange-950/20",
+  "Nursing": "bg-pink-50 dark:bg-pink-950/20",
+  "Domestic": "bg-blue-50 dark:bg-blue-950/20",
+  "Allied Health": "bg-violet-50 dark:bg-violet-950/20",
+  "Transport": "bg-purple-50 dark:bg-purple-950/20",
+  "Personal Care": "bg-sky-50 dark:bg-sky-950/20",
+  "Housing & Accommodation": "bg-indigo-50 dark:bg-indigo-950/20",
+  "Health & Medical": "bg-rose-50 dark:bg-rose-950/20",
+  "Community & Social": "bg-teal-50 dark:bg-teal-950/20",
+  "Support Worker": "bg-cyan-50 dark:bg-cyan-950/20",
+  "Fees & Admin": "bg-yellow-50 dark:bg-yellow-950/20",
+  "Equipment & Supplies": "bg-amber-50 dark:bg-amber-950/20",
   "Other": "",
 };
 
 const CATEGORY_DOT: Record<string, string> = {
-  "Meals & Food": "bg-orange-500",
-  "Nursing": "bg-pink-500",
-  "Domestic": "bg-blue-500",
-  "Allied Health": "bg-violet-500",
-  "Transport": "bg-purple-500",
-  "Personal Care": "bg-sky-500",
-  "Housing & Accommodation": "bg-indigo-500",
-  "Health & Medical": "bg-rose-500",
-  "Community & Social": "bg-teal-500",
-  "Support Worker": "bg-cyan-500",
-  "Fees & Admin": "bg-yellow-500",
-  "Equipment & Supplies": "bg-amber-500",
+  "Meals & Food": "bg-orange-400",
+  "Nursing": "bg-pink-400",
+  "Domestic": "bg-blue-400",
+  "Allied Health": "bg-violet-400",
+  "Transport": "bg-purple-400",
+  "Personal Care": "bg-sky-400",
+  "Housing & Accommodation": "bg-indigo-400",
+  "Health & Medical": "bg-rose-400",
+  "Community & Social": "bg-teal-400",
+  "Support Worker": "bg-cyan-400",
+  "Fees & Admin": "bg-yellow-400",
+  "Equipment & Supplies": "bg-amber-400",
   "Other": "bg-gray-400",
 };
 
 const DECISION_STYLES: Record<DecisionType, string> = {
-  approve: "border-green-500 bg-green-50 dark:bg-green-900/20",
-  dispute: "border-red-500 bg-red-50 dark:bg-red-900/20",
-  "not-sure": "border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20",
+  approve: "border-l-2 border-green-400 bg-green-50/60 dark:bg-green-950/15",
+  dispute: "border-l-2 border-red-400 bg-red-50/60 dark:bg-red-950/15",
+  "not-sure": "border-l-2 border-yellow-400 bg-yellow-50/60 dark:bg-yellow-950/15",
 };
 
 const STATUS_OPTIONS = [
@@ -66,9 +64,9 @@ const STATUS_OPTIONS = [
 
 const STATUS_COLORS: Record<string, string> = {
   "new": "bg-muted text-muted-foreground",
-  "in-progress": "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
-  "resolved": "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
-  "escalated": "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
+  "in-progress": "bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300",
+  "resolved": "bg-green-50 text-green-700 dark:bg-green-950/30 dark:text-green-300",
+  "escalated": "bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-300",
 };
 
 interface TransactionsTableProps {
@@ -98,15 +96,11 @@ const TransactionsTable = ({
       if (alert.type === "duplicate") {
         for (let i = 1; i < alert.transactions.length; i++) {
           const tx = alert.transactions[i];
-          if (!ids.has(tx.id)) {
-            ids.set(tx.id, "Possible Duplicate");
-          }
+          if (!ids.has(tx.id)) ids.set(tx.id, "Possible Duplicate");
         }
       } else {
         for (const tx of alert.transactions) {
-          if (!ids.has(tx.id)) {
-            ids.set(tx.id, alert.type === "management-fee" ? "Fee Issue" : "Anomaly");
-          }
+          if (!ids.has(tx.id)) ids.set(tx.id, alert.type === "management-fee" ? "Fee Issue" : "Anomaly");
         }
       }
     }
@@ -115,8 +109,8 @@ const TransactionsTable = ({
 
   if (transactions.length === 0) {
     return (
-      <div className="rounded-xl border border-border bg-card p-12 text-center">
-        <p className="text-lg text-muted-foreground">No transactions found</p>
+      <div className="rounded-[10px] border border-border bg-card p-10 text-center">
+        <p className="text-[15px] text-muted-foreground">No transactions found</p>
       </div>
     );
   }
@@ -142,21 +136,21 @@ const TransactionsTable = ({
   };
 
   return (
-    <div className="rounded-xl border border-border bg-card overflow-x-auto">
+    <div className="rounded-[10px] border border-border bg-card overflow-x-auto shadow-[0_1px_3px_0_hsl(0_0%_0%/0.04)]">
       <Table>
         <TableHeader>
-          <TableRow className="bg-muted/50">
-            <TableHead className="font-semibold text-base">Date</TableHead>
-            <TableHead className="font-semibold text-base">Category</TableHead>
-            <TableHead className="font-semibold text-base">Description</TableHead>
-            <TableHead className="font-semibold text-base text-right">Govt. Contribution</TableHead>
-            <TableHead className="font-semibold text-base text-right">Client Contribution</TableHead>
-            <TableHead className="font-semibold text-base text-right text-primary">Income</TableHead>
-            <TableHead className="font-semibold text-base text-right text-destructive">Expense</TableHead>
-            <TableHead className="font-semibold text-base w-[120px]">Flag</TableHead>
-            <TableHead className="font-semibold text-base w-[120px]">Status</TableHead>
+          <TableRow className="bg-[hsl(210,15%,97%)] dark:bg-muted/50 hover:bg-[hsl(210,15%,97%)]">
+            <TableHead className="text-[14px] font-semibold py-2 px-3">Date</TableHead>
+            <TableHead className="text-[14px] font-semibold py-2 px-3">Category</TableHead>
+            <TableHead className="text-[14px] font-semibold py-2 px-3 max-w-[320px]">Description</TableHead>
+            <TableHead className="text-[14px] font-semibold py-2 px-3 text-right">Govt.</TableHead>
+            <TableHead className="text-[14px] font-semibold py-2 px-3 text-right">Client</TableHead>
+            <TableHead className="text-[14px] font-semibold py-2 px-3 text-right text-primary">Income</TableHead>
+            <TableHead className="text-[14px] font-semibold py-2 px-3 text-right text-destructive">Expense</TableHead>
+            <TableHead className="text-[14px] font-semibold py-2 px-3 w-[100px]">Flag</TableHead>
+            <TableHead className="text-[14px] font-semibold py-2 px-3 w-[110px]">Status</TableHead>
             {isAuthenticated && (
-              <TableHead className="font-semibold text-base w-[200px] no-print">Decision</TableHead>
+              <TableHead className="text-[14px] font-semibold py-2 px-3 w-[160px] no-print">Decision</TableHead>
             )}
           </TableRow>
         </TableHeader>
@@ -168,130 +162,129 @@ const TransactionsTable = ({
             const existing = decisions.get(tx.id);
             const suggestion = getSuggestion && !existing ? getSuggestion(tx) : null;
 
-            const decisionBorder = existing ? DECISION_STYLES[existing.decision] : "";
             const rowBg = existing
-              ? decisionBorder
+              ? DECISION_STYLES[existing.decision]
               : flag
-                ? "bg-destructive/10"
+                ? "bg-red-50/50 dark:bg-red-950/10"
                 : isIncome
-                  ? "bg-green-50 dark:bg-green-900/10"
+                  ? "bg-green-50/40 dark:bg-green-950/10"
                   : CATEGORY_BG[category] || "";
 
             return (
               <>
-                <TableRow key={tx.id} className={`${rowBg} ${existing ? "border-l-2" : ""}`}>
-                  <TableCell className="font-mono text-base">{formatDateDDMMYYYY(tx.date)}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1.5">
-                      <span className={`inline-block h-2.5 w-2.5 rounded-full shrink-0 ${CATEGORY_DOT[category] || "bg-gray-400"}`} />
-                      <span className="text-sm">{category}</span>
+                <TableRow key={tx.id} className={`${rowBg} hover:bg-muted/30`}>
+                  <TableCell className="font-mono text-[15px] py-2 px-3 whitespace-nowrap">{formatDateDDMMYYYY(tx.date)}</TableCell>
+                  <TableCell className="py-2 px-3">
+                    <div className="flex items-center gap-1.5 whitespace-nowrap">
+                      <span className={`inline-block h-2 w-2 rounded-full shrink-0 ${CATEGORY_DOT[category] || "bg-gray-400"}`} />
+                      <span className="text-[13px] font-medium">{category}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="text-base">{tx.description}</TableCell>
-                  <TableCell className="text-right font-mono text-base">
+                  <TableCell className="text-[15px] py-2 px-3 max-w-[320px]">{tx.description}</TableCell>
+                  <TableCell className="text-right font-mono text-[15px] py-2 px-3">
                     {tx.govt_contribution != null ? (
                       <span className="text-primary">${tx.govt_contribution.toFixed(2)}</span>
                     ) : (
-                      <span className="text-muted-foreground">—</span>
+                      <span className="text-muted-foreground/40">—</span>
                     )}
                   </TableCell>
-                  <TableCell className="text-right font-mono text-base">
+                  <TableCell className="text-right font-mono text-[15px] py-2 px-3">
                     {tx.client_contribution != null ? (
                       <span>${tx.client_contribution.toFixed(2)}</span>
                     ) : (
-                      <span className="text-muted-foreground">—</span>
+                      <span className="text-muted-foreground/40">—</span>
                     )}
                   </TableCell>
-                  <TableCell className="text-right font-mono text-base text-primary">
+                  <TableCell className="text-right font-mono text-[15px] py-2 px-3 text-primary font-medium">
                     {isIncome ? `$${tx.amount.toFixed(2)}` : ""}
                   </TableCell>
-                  <TableCell className="text-right font-mono text-base text-destructive">
+                  <TableCell className="text-right font-mono text-[15px] py-2 px-3 text-destructive font-medium">
                     {!isIncome ? `$${Math.abs(tx.amount).toFixed(2)}` : ""}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="py-2 px-3">
                     {flag && (
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Badge variant="destructive" className="text-xs cursor-help">
+                          <span className="inline-flex items-center h-6 px-2 rounded-full text-[13px] font-semibold bg-red-100 text-red-700 dark:bg-red-950/30 dark:text-red-300 cursor-help whitespace-nowrap">
                             {flag}
-                          </Badge>
+                          </span>
                         </TooltipTrigger>
-                        <TooltipContent className="max-w-xs text-sm">
+                        <TooltipContent className="max-w-xs text-[13px]">
                           Similar charge detected on a nearby date for a similar amount.
                         </TooltipContent>
                       </Tooltip>
                     )}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="py-2 px-3">
                     {isAuthenticated && onStatusUpdate ? (
                       <Select
                         value={tx.status || "new"}
                         onValueChange={(val) => onStatusUpdate(tx.id, val)}
                       >
-                        <SelectTrigger className="h-7 text-xs w-[110px]">
+                        <SelectTrigger className="h-6 text-[12px] w-[100px] rounded-md border-border">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
                           {STATUS_OPTIONS.map((opt) => (
-                            <SelectItem key={opt.value} value={opt.value}>
+                            <SelectItem key={opt.value} value={opt.value} className="text-[13px]">
                               {opt.label}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     ) : (
-                      <Badge className={`text-xs ${STATUS_COLORS[tx.status || "new"] || STATUS_COLORS["new"]}`}>
+                      <span className={`inline-flex items-center h-6 px-2 rounded-full text-[12px] font-medium ${STATUS_COLORS[tx.status || "new"] || STATUS_COLORS["new"]}`}>
                         {STATUS_OPTIONS.find((o) => o.value === (tx.status || "new"))?.label || "New"}
-                      </Badge>
+                      </span>
                     )}
                   </TableCell>
                   {isAuthenticated && (
-                    <TableCell className="no-print">
+                    <TableCell className="no-print py-2 px-3">
                       {existing ? (
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1">
                           {existing.decision === "approve" && (
-                            <Badge className="bg-green-600 text-white text-xs gap-1">
+                            <span className="inline-flex items-center gap-1 h-6 px-2 rounded-full text-[13px] font-semibold bg-green-100 text-green-700 dark:bg-green-950/30 dark:text-green-300">
                               <CheckCircle2 className="h-3 w-3" /> Approved
-                            </Badge>
+                            </span>
                           )}
                           {existing.decision === "dispute" && (
-                            <Badge variant="destructive" className="text-xs gap-1">
+                            <span className="inline-flex items-center gap-1 h-6 px-2 rounded-full text-[13px] font-semibold bg-red-100 text-red-700 dark:bg-red-950/30 dark:text-red-300">
                               <XCircle className="h-3 w-3" /> Disputed
-                            </Badge>
+                            </span>
                           )}
                           {existing.decision === "not-sure" && (
-                            <Badge className="bg-yellow-500 text-white text-xs gap-1">
+                            <span className="inline-flex items-center gap-1 h-6 px-2 rounded-full text-[13px] font-semibold bg-yellow-100 text-yellow-700 dark:bg-yellow-950/30 dark:text-yellow-300">
                               <HelpCircle className="h-3 w-3" /> Not Sure
-                            </Badge>
+                            </span>
                           )}
                         </div>
                       ) : (
-                        <div className="flex flex-col gap-1">
+                        <div className="flex flex-col gap-0.5">
                           {suggestion && (
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <button
                                   onClick={() => handleSuggestionAccept(tx, suggestion)}
-                                  className="flex items-center gap-1 text-xs text-amber-600 hover:text-amber-800 mb-0.5"
+                                  className="flex items-center gap-1 text-[12px] text-amber-600 hover:text-amber-800"
                                 >
                                   <Lightbulb className="h-3 w-3" />
                                   <span className="underline">
-                                    You usually {suggestion.preferred_decision} {category}
+                                    Usually {suggestion.preferred_decision}
                                   </span>
                                 </button>
                               </TooltipTrigger>
-                              <TooltipContent className="max-w-xs text-sm">
+                              <TooltipContent className="max-w-xs text-[13px]">
                                 Based on {suggestion.occurrence_count} previous decisions. Click to apply.
                               </TooltipContent>
                             </Tooltip>
                           )}
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-0.5">
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-7 w-7 text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30"
+                                  className="h-7 w-7 text-green-600 hover:bg-green-50 dark:hover:bg-green-950/20"
                                   onClick={() => handleDecision(tx, "approve")}
                                 >
                                   <CheckCircle2 className="h-4 w-4" />
@@ -304,7 +297,7 @@ const TransactionsTable = ({
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-7 w-7 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30"
+                                  className="h-7 w-7 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"
                                   onClick={() => handleDecision(tx, "dispute")}
                                 >
                                   <XCircle className="h-4 w-4" />
@@ -317,7 +310,7 @@ const TransactionsTable = ({
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-7 w-7 text-yellow-600 hover:bg-yellow-100 dark:hover:bg-yellow-900/30"
+                                  className="h-7 w-7 text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-950/20"
                                   onClick={() => handleDecision(tx, "not-sure")}
                                 >
                                   <HelpCircle className="h-4 w-4" />
@@ -332,9 +325,9 @@ const TransactionsTable = ({
                   )}
                 </TableRow>
                 {expandedDispute === tx.id && (
-                  <TableRow key={`${tx.id}-note`} className="bg-red-50/50 dark:bg-red-900/10">
-                    <TableCell colSpan={isAuthenticated ? 10 : 9}>
-                      <div className="flex items-center gap-2 py-1">
+                  <TableRow key={`${tx.id}-note`} className="bg-red-50/30 dark:bg-red-950/10">
+                    <TableCell colSpan={isAuthenticated ? 10 : 9} className="py-2 px-3">
+                      <div className="flex items-center gap-2">
                         <Input
                           placeholder="Add a note about this dispute (optional)..."
                           value={disputeNotes.get(tx.id) || ""}
@@ -345,11 +338,12 @@ const TransactionsTable = ({
                               return next;
                             })
                           }
-                          className="max-w-md text-sm"
+                          className="max-w-md text-[14px] h-8"
                         />
                         <Button
                           size="sm"
                           variant="destructive"
+                          className="h-8 text-[13px] font-medium rounded-lg"
                           onClick={() => {
                             onDecision?.(tx, "dispute", disputeNotes.get(tx.id) || undefined);
                             setExpandedDispute(null);
@@ -360,6 +354,7 @@ const TransactionsTable = ({
                         <Button
                           size="sm"
                           variant="ghost"
+                          className="h-8 text-[13px] font-medium rounded-lg"
                           onClick={() => setExpandedDispute(null)}
                         >
                           Cancel

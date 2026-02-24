@@ -7,10 +7,13 @@ export default {
   theme: {
     container: {
       center: true,
-      padding: "2rem",
+      padding: "1.5rem",
       screens: {
         "2xl": "1400px",
       },
+    },
+    fontFamily: {
+      sans: ["'Public Sans'", "sans-serif"],
     },
     extend: {
       colors: {
