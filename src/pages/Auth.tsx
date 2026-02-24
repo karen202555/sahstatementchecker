@@ -9,7 +9,7 @@ import { toast } from "@/hooks/use-toast";
 
 type Mode = "login" | "signup" | "forgot";
 
-const BETA_CODE = "BETA2025";
+const BETA_CODE = "BETA2026";
 
 const Auth = () => {
   const navigate = useNavigate();
