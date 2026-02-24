@@ -41,6 +41,36 @@ export type Database = {
         }
         Relationships: []
       }
+      decision_memory: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          occurrence_count: number
+          preferred_decision: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          occurrence_count?: number
+          preferred_decision: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          occurrence_count?: number
+          preferred_decision?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -62,6 +92,36 @@ export type Database = {
           id?: string
           preferred_language?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      transaction_decisions: {
+        Row: {
+          created_at: string
+          decision: string
+          id: string
+          note: string | null
+          transaction_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          decision: string
+          id?: string
+          note?: string | null
+          transaction_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          decision?: string
+          id?: string
+          note?: string | null
+          transaction_id?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

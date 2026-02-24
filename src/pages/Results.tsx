@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Table as TableIcon, CalendarDays, Download, Printer, PieChart, ShieldAlert, Share2, FileDown } from "lucide-react";
+import { ArrowLeft, Table as TableIcon, CalendarDays, Download, Printer, PieChart, ShieldAlert, Share2, FileDown, Eraser } from "lucide-react";
 import Header from "@/components/Header";
 import TransactionsTable from "@/components/TransactionsTable";
 import TransactionCalendar from "@/components/TransactionCalendar";
@@ -13,6 +13,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { getTransactions, type Transaction } from "@/lib/transactions";
 import { toast } from "@/hooks/use-toast";
 import { generatePdfReport } from "@/lib/pdf-report";
+import { useDecisions } from "@/hooks/use-decisions";
 
 function exportToExcel(transactions: Transaction[]) {
   const header = "Date\tDescription\tAmount";
@@ -36,6 +37,7 @@ const Results = () => {
   const sessionId = searchParams.get("session");
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const { decisions, setDecision, getSuggestion, clearMemory, isAuthenticated } = useDecisions(transactions);
 
   useEffect(() => {
     if (!sessionId) return;
@@ -84,6 +86,20 @@ const Results = () => {
                   <FileDown className="h-4 w-4" />
                   PDF Report
                 </Button>
+                {isAuthenticated && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => {
+                      clearMemory();
+                      toast({ title: "Memory cleared", description: "Your saved preferences for recurring charges have been reset." });
+                    }}
+                  >
+                    <Eraser className="h-4 w-4" />
+                    Clear Memory
+                  </Button>
+                )}
               </>
             )}
           </div>
@@ -122,7 +138,13 @@ const Results = () => {
                 </TabsTrigger>
               </TabsList>
               <TabsContent value="table">
-                <TransactionsTable transactions={transactions} />
+                <TransactionsTable
+                  transactions={transactions}
+                  decisions={decisions}
+                  onDecision={setDecision}
+                  getSuggestion={getSuggestion}
+                  isAuthenticated={isAuthenticated}
+                />
               </TabsContent>
               <TabsContent value="calendar">
                 <TransactionCalendar transactions={transactions} />
