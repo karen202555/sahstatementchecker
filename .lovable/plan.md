@@ -1,56 +1,27 @@
 
 
-# User Profile Settings Page
+## Fix: Remove Red-Toned Category Colors
 
-## What You Get
-A new "/settings" page accessible from the header, where you can:
-- **Update your display name** with instant save
-- **Change your password** (new password + confirmation)
-- **Set preferred language** (dropdown, stored for future multilingual support)
+Red is reserved for "Potential Issue" flags, so categories using red/rose/pink tones need new colors to avoid confusion.
 
-## How It Works
+### Changes Required
 
-### New Route and Page
-A new `src/pages/Settings.tsx` page with three clearly separated sections in card layouts. The route `/settings` is added as a protected route in `App.tsx`.
+**Affected categories and their new colors:**
 
-### Header Update
-A small gear/settings icon (or your avatar) in `src/components/Header.tsx` links to `/settings`, giving easy access from any page.
+| Category | Current Color | New Color |
+|---|---|---|
+| Nursing | hsl(340, 65%, 50%) (rose/red) | hsl(25, 70%, 50%) (warm amber) |
+| Health & Medical | hsl(0, 70%, 55%) (red) | hsl(175, 60%, 40%) (teal) |
 
-### Display Name
-- Pre-fills with your current display name from the profile
-- On save, updates both the `profiles` table (via Supabase) and the auth user metadata
-- Shows a success toast on completion
+### Files to Update
 
-### Change Password
-- Two fields: new password and confirm password
-- Client-side validation (minimum 6 characters, passwords must match)
-- Calls `supabase.auth.updateUser({ password })` to update
-- Shows success/error feedback
+1. **`src/lib/categorize.ts`** (lines 12, 19)
+   - Change Nursing color from `hsl(340, 65%, 50%)` to `hsl(25, 70%, 50%)`
+   - Change Health & Medical color from `hsl(0, 70%, 55%)` to `hsl(175, 60%, 40%)`
 
-### Preferred Language
-- A dropdown with English selected by default (more languages added later with the multilingual plan)
-- Stored in the `profiles` table via a new `preferred_language` column (default: `'en'`)
-- This column will be read by the i18n system when multilingual support is implemented
+2. **`src/components/TransactionCalendar.tsx`**
+   - Update `CATEGORY_COLORS` map: change Nursing from `bg-rose-200` to `bg-amber-200` tones, and Health & Medical from `bg-pink-200` to `bg-teal-200` tones
+   - Update `CATEGORY_DOT_COLORS` map to match the new hsl values
 
-## Technical Details
-
-### Database Change
-One migration to add the language column:
-```sql
-ALTER TABLE public.profiles
-  ADD COLUMN preferred_language text NOT NULL DEFAULT 'en';
-```
-
-### Files Created
-- `src/pages/Settings.tsx` -- the settings page with three form sections
-
-### Files Modified
-- `src/App.tsx` -- add `/settings` as a protected route
-- `src/components/Header.tsx` -- add a settings link/icon next to the sign-out button
-- `src/hooks/use-auth.tsx` -- include `preferred_language` in the Profile type and `loadProfile` query
-
-### Validation
-- Display name: trimmed, 1-100 characters
-- Password: minimum 6 characters, must match confirmation
-- Language: must be one of the supported locale codes
+This is a small, focused color change across two files with no logic changes.
 
