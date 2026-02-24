@@ -61,7 +61,7 @@ export async function getTransactions(sessionId: string): Promise<Transaction[]>
     `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-shared-transactions?session_id=${encodeURIComponent(sessionId)}`,
     {
       headers: {
-        apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
       },
     }
   );
