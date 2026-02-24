@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Table as TableIcon, CalendarDays, Download, Printer, PieChart, ShieldAlert, Share2, FileDown, Eraser } from "lucide-react";
+import { ArrowLeft, Table as TableIcon, CalendarDays, Download, Printer, PieChart, ShieldAlert, Share2, FileDown, Eraser, AlertTriangle, Copy } from "lucide-react";
 import Header from "@/components/Header";
 import TransactionsTable from "@/components/TransactionsTable";
 import TransactionCalendar from "@/components/TransactionCalendar";
@@ -10,10 +10,12 @@ import IssueSummary from "@/components/IssueSummary";
 import BetaFeedback from "@/components/BetaFeedback";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { getTransactions, type Transaction } from "@/lib/transactions";
 import { toast } from "@/hooks/use-toast";
 import { generatePdfReport } from "@/lib/pdf-report";
 import { useDecisions } from "@/hooks/use-decisions";
+import { generateDisputeReport, getDisputedTransactions } from "@/lib/dispute-report";
 
 function exportToExcel(transactions: Transaction[]) {
   const header = "Date\tDescription\tAmount";
@@ -38,6 +40,16 @@ const Results = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const { decisions, setDecision, getSuggestion, clearMemory, isAuthenticated } = useDecisions(transactions);
+  const [showDisputeDialog, setShowDisputeDialog] = useState(false);
+
+  const disputedTxs = useMemo(
+    () => getDisputedTransactions(transactions, decisions),
+    [transactions, decisions]
+  );
+  const disputeReport = useMemo(
+    () => generateDisputeReport(transactions, decisions),
+    [transactions, decisions]
+  );
 
   useEffect(() => {
     if (!sessionId) return;
@@ -82,10 +94,21 @@ const Results = () => {
                   <Download className="h-4 w-4" />
                   Excel
                 </Button>
-                <Button variant="outline" size="sm" className="gap-2" onClick={() => generatePdfReport(transactions)}>
+                <Button variant="outline" size="sm" className="gap-2" onClick={() => generatePdfReport(transactions, decisions)}>
                   <FileDown className="h-4 w-4" />
                   PDF Report
                 </Button>
+                {disputedTxs.length > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 border-destructive text-destructive hover:bg-destructive/10"
+                    onClick={() => setShowDisputeDialog(true)}
+                  >
+                    <AlertTriangle className="h-4 w-4" />
+                    Export Disputes ({disputedTxs.length})
+                  </Button>
+                )}
                 {isAuthenticated && (
                   <Button
                     variant="outline"
@@ -165,6 +188,31 @@ const Results = () => {
             )}
           </div>
         )}
+        {/* Dispute export dialog */}
+        <Dialog open={showDisputeDialog} onOpenChange={setShowDisputeDialog}>
+          <DialogContent className="max-w-2xl max-h-[80vh]">
+            <DialogHeader>
+              <DialogTitle className="text-xl">Disputed Transactions</DialogTitle>
+              <DialogDescription>
+                Copy this text and paste it into an email to your provider or plan manager.
+              </DialogDescription>
+            </DialogHeader>
+            <pre className="whitespace-pre-wrap font-mono text-sm bg-muted p-4 rounded-md overflow-y-auto max-h-[50vh] border">
+              {disputeReport}
+            </pre>
+            <Button
+              size="lg"
+              className="w-full gap-2 text-base"
+              onClick={() => {
+                navigator.clipboard.writeText(disputeReport);
+                toast({ title: "Copied!", description: "Dispute summary copied to clipboard. Paste it into your email." });
+              }}
+            >
+              <Copy className="h-5 w-5" />
+              Copy to Clipboard
+            </Button>
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );
