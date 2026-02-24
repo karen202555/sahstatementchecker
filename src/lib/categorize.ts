@@ -8,6 +8,7 @@ export interface CategorySummary {
 }
 
 const CATEGORY_RULES: { category: string; keywords: string[]; color: string }[] = [
+  { category: "Income", keywords: ["income", "payment received", "deposit", "credit", "funding", "ndis payment", "plan funding", "reimbursement", "refund"], color: "hsl(140, 70%, 40%)" },
   { category: "Nursing", keywords: ["nursing", "nurse"], color: "hsl(340, 65%, 50%)" },
   { category: "Meals & Food", keywords: ["meal", "food", "lunch", "dinner", "breakfast", "catering", "grocery", "supermarket", "cafe", "restaurant"], color: "hsl(35, 85%, 55%)" },
   { category: "Domestic", keywords: ["domestic", "cleaning", "laundry", "housekeeping", "home care"], color: "hsl(220, 70%, 55%)" },
