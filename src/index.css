@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap');
 
 @layer base {
   :root {
@@ -22,19 +22,19 @@
     --secondary-foreground: 220 20% 16%;
 
     --muted: 210 15% 94%;
-    --muted-foreground: 215 14% 50%;
+    --muted-foreground: 215 14% 46%;
 
     --accent: 168 50% 95%;
     --accent-foreground: 168 72% 30%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 65% 55%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214 20% 92%;
-    --input: 214 20% 92%;
+    --border: 214 20% 90%;
+    --input: 214 20% 90%;
     --ring: 168 72% 40%;
 
-    --radius: 0.75rem;
+    --radius: 0.625rem;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -68,8 +68,8 @@
     --accent: 168 40% 15%;
     --accent-foreground: 168 72% 70%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 55% 40%;
+    --destructive-foreground: 0 0% 100%;
 
     --border: 220 15% 20%;
     --input: 220 15% 20%;
@@ -92,9 +92,23 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Inter', sans-serif;
-    font-size: 18px;
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Public Sans', sans-serif;
+    font-size: 16px;
+    line-height: 1.4;
+    letter-spacing: 0.2px;
+  }
+
+  h1 {
+    font-size: 26px;
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  h2, h3 {
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1.3;
   }
 }
 
@@ -110,30 +124,25 @@
     font-size: 12px;
   }
 
-  /* Hide non-essential UI */
   header,
   .no-print,
   button:not(.print-keep) {
     display: none !important;
   }
 
-  /* Make calendar fill the page */
   .container {
     max-width: 100% !important;
     padding: 0 !important;
   }
 
-  /* Show print header */
-  .print\\:block {
+  .print\:block {
     display: block !important;
   }
 
-  /* Ensure calendar grid is fully visible */
   [role="tabpanel"] {
     display: block !important;
   }
 
-  /* Hide tab triggers */
   [role="tablist"] {
     display: none !important;
   }
