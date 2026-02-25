@@ -52,6 +52,16 @@ function formatAmount(amount: number): string {
   return `$${abs.toFixed(2)}`;
 }
 
+function getUnitsLabel(tx: Transaction): string {
+  if (!tx.unit_cost || tx.unit_cost === 0) return "—";
+  const units = Math.round(Math.abs(tx.amount) / tx.unit_cost * 10) / 10;
+  const rateStr = (tx.rate_units || "").toLowerCase();
+  if (rateStr.includes("hour") || rateStr.includes("hr")) return `${units}h`;
+  if (rateStr.includes("km")) return `${units}km`;
+  if (rateStr.includes("day")) return `${units}d`;
+  return `${units}u`;
+}
+
 function parseDate(dateStr: string): Date | null {
   const formats = ["yyyy-MM-dd", "dd/MM/yy", "dd/MM/yyyy", "MM/dd/yyyy", "M/d/yyyy", "MM-dd-yyyy"];
   for (const fmt of formats) {
@@ -121,8 +131,7 @@ const TransactionCalendar = ({ transactions }: TransactionCalendarProps) => {
 
   const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-  // Max blocks that fit in a cell — we'll cap at a reasonable number
-  const MAX_BLOCKS = 6;
+  const MAX_BLOCKS = 8;
 
   const selectedDayTx = selectedDay ? txByDate.get(selectedDay) || [] : [];
 
@@ -197,8 +206,8 @@ const TransactionCalendar = ({ transactions }: TransactionCalendarProps) => {
                     className="flex-1"
                     style={{
                       display: "grid",
-                      gridTemplateColumns: "repeat(auto-fill, minmax(60px, 1fr))",
-                      gap: "4px",
+                      gridTemplateColumns: "repeat(auto-fill, minmax(70px, 1fr))",
+                      gap: "3px",
                       alignContent: "start",
                     }}
                   >
@@ -210,34 +219,27 @@ const TransactionCalendar = ({ transactions }: TransactionCalendarProps) => {
                       return (
                         <div
                           key={tx.id}
-                          className={`rounded-xl flex flex-col items-center justify-center text-center ${isFlagged ? "ring-2 ring-destructive" : ""}`}
+                          className={`rounded-lg flex flex-col items-center justify-center text-center ${isFlagged ? "ring-2 ring-destructive" : ""}`}
                           style={{
                             backgroundColor: isFlagged ? "#FEE2E2" : style.bg,
                             color: isFlagged ? "#991B1B" : style.text,
-                            padding: "4px",
-                            minHeight: "60px",
-                            aspectRatio: "1",
+                            padding: "3px 4px",
+                            height: "36px",
                           }}
-                          title={`${category}: ${tx.description} — ${formatAmount(tx.amount)}`}
+                          title={`${category}: ${tx.description} — ${getUnitsLabel(tx)} • ${formatAmount(tx.amount)}`}
                         >
-                          <span className="text-[12px] font-bold leading-tight">{style.code}</span>
-                          <span className="text-[12px] font-semibold leading-tight mt-0.5">{formatAmount(tx.amount)}</span>
+                          <span className="text-[11px] font-bold leading-[1.1]">{style.code}</span>
+                          <span className="text-[11px] font-semibold leading-[1.1] truncate max-w-full">{getUnitsLabel(tx)} • {formatAmount(tx.amount)}</span>
                         </div>
                       );
                     })}
 
                     {overflow > 0 && (
                       <div
-                        className="rounded-xl flex items-center justify-center text-center"
-                        style={{
-                          backgroundColor: "#F3F4F6",
-                          color: "#374151",
-                          padding: "4px",
-                          minHeight: "60px",
-                          aspectRatio: "1",
-                        }}
+                        className="rounded-lg flex items-center justify-center text-center bg-muted"
+                        style={{ height: "36px", padding: "3px 4px" }}
                       >
-                        <span className="text-[12px] font-bold">+{overflow} more</span>
+                        <span className="text-[11px] font-bold text-muted-foreground">+{overflow}</span>
                       </div>
                     )}
                   </div>
