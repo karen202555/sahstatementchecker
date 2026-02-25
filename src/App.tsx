@@ -10,6 +10,7 @@ import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import SettingsPage from "./pages/Settings";
+import Install from "./pages/Install";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +49,7 @@ const AppRoutes = () => (
     <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
     {/* Results is accessible without auth (shared links) */}
     <Route path="/results" element={<Results />} />
+    <Route path="/install" element={<Install />} />
     <Route path="*" element={<NotFound />} />
   </Routes>
 );
