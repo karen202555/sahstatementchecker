@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FileSpreadsheet, Loader2, ArrowLeft } from "lucide-react";
+import authBg from "@/assets/auth-bg.jpeg";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -74,8 +75,9 @@ const Auth = () => {
       : "Reset your password";
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
-      <div className="w-full max-w-sm space-y-8">
+    <div className="relative flex min-h-screen flex-col items-center justify-center bg-background px-4 overflow-hidden">
+      <img src={authBg} alt="" className="absolute inset-0 w-full h-full object-cover opacity-10 pointer-events-none" />
+      <div className="relative w-full max-w-sm space-y-8">
         {/* Logo */}
         <div className="flex flex-col items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
