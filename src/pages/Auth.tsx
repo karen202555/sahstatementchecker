@@ -76,7 +76,7 @@ const Auth = () => {
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center bg-background px-4 overflow-hidden">
-      <img src={authBg} alt="" className="absolute inset-0 w-full h-full object-cover opacity-10 pointer-events-none" />
+      <img src={authBg} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40 pointer-events-none" />
       <div className="relative w-full max-w-sm space-y-8">
         {/* Logo */}
         <div className="flex flex-col items-center gap-3">
