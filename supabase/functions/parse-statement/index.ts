@@ -113,8 +113,8 @@ serve(async (req) => {
       });
     }
 
-    let transactions: { date: string; description: string; amount: number; govt_contribution?: number | null; client_contribution?: number | null }[] = [];
-    let lowConfidence = false;
+  let transactions: { date: string; description: string; amount: number; govt_contribution?: number | null; client_contribution?: number | null; rate_units?: string | null; unit_cost?: number | null }[] = [];
+  let lowConfidence = false;
 
     if (fileExtension === 'csv') {
       const text = await file.text();
@@ -160,6 +160,8 @@ serve(async (req) => {
         amount: t.amount,
         govt_contribution: t.govt_contribution ?? null,
         client_contribution: t.client_contribution ?? null,
+        rate_units: t.rate_units ?? null,
+        unit_cost: t.unit_cost ?? null,
         file_name: fileName,
         user_id: userId ?? null,
       }));
@@ -291,17 +293,19 @@ async function parseWithAI(
   text: string | null,
   fileName: string,
   base64Pdf: string | null
-): Promise<{ date: string; description: string; amount: number; govt_contribution?: number | null; client_contribution?: number | null }[]> {
+): Promise<{ date: string; description: string; amount: number; govt_contribution?: number | null; client_contribution?: number | null; rate_units?: string | null; unit_cost?: number | null }[]> {
   const apiKey = Deno.env.get('LOVABLE_API_KEY');
   if (!apiKey) { console.error('No LOVABLE_API_KEY found'); return []; }
 
   const systemPrompt = `You are a precise bank/provider statement parser for Australian NDIS and Support at Home (SAH) statements. Extract every individual transaction from the document.
 
 Rules:
-- Return ONLY a JSON array of objects with these fields: "date", "description", "amount", "govt_contribution", "client_contribution".
+- Return ONLY a JSON array of objects with these fields: "date", "description", "amount", "govt_contribution", "client_contribution", "rate_units", "unit_cost".
 - "amount" must be a number: negative for debits/expenses/withdrawals, positive for credits/income/deposits.
 - "govt_contribution": the government/NDIS/SAH subsidy portion if shown on the statement. Use null if not present.
 - "client_contribution": the client/participant co-payment portion if shown on the statement. Use null if not present.
+- "rate_units": the rate/unit type as shown on the statement (e.g. "Per hour", "Per item", "Per day", "Per week", "Per km"). Use null if not present.
+- "unit_cost": the cost per unit as a positive number (e.g. 100.00 for $100.00 per hour). Use null if not present.
 - Extract the EXACT amounts as shown on the statement. Do NOT round or estimate.
 - IMPORTANT: Look at the statement header, title, or period line to determine what month/year this statement covers.
 - Use that context to correctly interpret ambiguous date formats (dd/MM vs MM/dd).
@@ -312,6 +316,7 @@ Rules:
 - Do NOT include interest rate information, account numbers, or headers.
 - Handle varied column layouts: some statements use separate Debit/Credit columns, some use a single Amount column.
 - Some statements have columns like "Govt Subsidy", "Government Contribution", "Subsidy", "Client Fee", "Client Contribution", "Co-payment" — extract these into govt_contribution and client_contribution.
+- Some statements have columns like "Rate", "Units", "Unit Cost", "Qty", "Quantity" — extract the rate type into rate_units and the per-unit cost into unit_cost.
 - Handle currency symbols ($, AUD, etc.) by stripping them from amounts.
 - If amounts are shown in parentheses like (50.00), treat them as negative.
 - No markdown, no explanation, just the JSON array.`;

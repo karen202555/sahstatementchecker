@@ -305,9 +305,11 @@ export default function SAHStatement({ transactions }: SAHStatementProps) {
                 <tr key={tx.id} className={`border-b border-[hsl(0,0%,90%)] ${i % 2 === 1 ? "bg-[hsl(210,20%,97%)]" : ""}`}>
                   <td className="py-1.5 px-2 whitespace-nowrap font-semibold text-[13px]">{formatDateGov(tx.date)}</td>
                   <td className="py-1.5 px-2 text-[13px] max-w-[240px]">{tx.description}</td>
-                  <td className="py-1.5 px-2 text-right text-[13px] text-muted-foreground">–</td>
-                  <td className="py-1.5 px-2 text-right text-[13px] text-muted-foreground">–</td>
-                  <td className="py-1.5 px-2 text-right text-[13px] text-muted-foreground">–</td>
+                  <td className="py-1.5 px-2 text-right text-[13px]">{tx.rate_units || "–"}</td>
+                  <td className="py-1.5 px-2 text-right text-[13px]">
+                    {tx.unit_cost && tx.amount ? (Math.abs(tx.amount) / tx.unit_cost).toFixed(2).replace(/\.00$/, '') : "–"}
+                  </td>
+                  <td className="py-1.5 px-2 text-right text-[13px]">{tx.unit_cost != null ? fmt(tx.unit_cost) : "–"}</td>
                   <td className="py-1.5 px-2 text-right text-[13px] font-medium">{fmt(Math.abs(tx.amount))}</td>
                   <td className="py-1.5 px-2 text-right text-[13px]">
                     {tx.govt_contribution != null ? fmt(Math.abs(tx.govt_contribution)) : "–"}
