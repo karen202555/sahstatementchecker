@@ -135,8 +135,10 @@ export type Database = {
           file_name: string | null
           govt_contribution: number | null
           id: string
+          rate_units: string | null
           session_id: string
           status: string
+          unit_cost: number | null
           user_id: string | null
         }
         Insert: {
@@ -148,8 +150,10 @@ export type Database = {
           file_name?: string | null
           govt_contribution?: number | null
           id?: string
+          rate_units?: string | null
           session_id: string
           status?: string
+          unit_cost?: number | null
           user_id?: string | null
         }
         Update: {
@@ -161,8 +165,10 @@ export type Database = {
           file_name?: string | null
           govt_contribution?: number | null
           id?: string
+          rate_units?: string | null
           session_id?: string
           status?: string
+          unit_cost?: number | null
           user_id?: string | null
         }
         Relationships: []

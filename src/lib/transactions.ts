@@ -8,6 +8,8 @@ export interface Transaction {
   amount: number;
   govt_contribution: number | null;
   client_contribution: number | null;
+  rate_units: string | null;
+  unit_cost: number | null;
   status: string;
   file_name: string | null;
   created_at: string;
