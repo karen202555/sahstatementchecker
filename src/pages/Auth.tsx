@@ -76,7 +76,7 @@ const Auth = () => {
   "Reset your password";
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center bg-background px-4 overflow-hidden">
+    <div className="relative flex min-h-screen flex-col items-center justify-end pb-12 md:justify-center md:pb-0 md:pt-24 bg-background px-4 overflow-hidden">
       <img src={authBg} alt="" className="absolute inset-0 w-full h-full object-cover opacity-60 pointer-events-none" />
       {/* Logo — top left */}
       <img alt="Statement Checker" className="absolute top-4 left-4 md:top-6 md:left-6 h-32 md:h-44 lg:h-56 w-auto z-10 drop-shadow-md mix-blend-multiply" src={logo} />
