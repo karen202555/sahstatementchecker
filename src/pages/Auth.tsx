@@ -78,10 +78,11 @@ const Auth = () => {
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center bg-background px-4 overflow-hidden">
       <img src={authBg} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40 pointer-events-none" />
+      {/* Logo — top left */}
+      <img alt="Statement Checker" className="absolute top-6 left-6 h-40 w-auto z-10" src="/lovable-uploads/263f22f8-fe64-4aeb-8063-b91884509880.png" />
       <div className="relative w-full max-w-sm space-y-8">
-        {/* Logo */}
-        <div className="flex flex-col items-center gap-3">
-          <img alt="Statement Checker" className="h-20 w-auto" src="/lovable-uploads/263f22f8-fe64-4aeb-8063-b91884509880.png" />
+      {/* Subtitle */}
+        <div className="flex flex-col items-center">
           <p className="text-base font-semibold text-foreground text-center">{subtitle}</p>
         </div>
 
