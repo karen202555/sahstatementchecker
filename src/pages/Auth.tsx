@@ -79,7 +79,7 @@ const Auth = () => {
     <div className="relative flex min-h-screen flex-col items-center justify-center bg-background px-4 overflow-hidden">
       <img src={authBg} alt="" className="absolute inset-0 w-full h-full object-cover opacity-60 pointer-events-none" />
       {/* Logo — top left */}
-      <img alt="Statement Checker" className="absolute top-4 left-4 md:top-6 md:left-6 h-24 md:h-36 lg:h-44 w-auto z-10 drop-shadow-md mix-blend-multiply" src={logo} />
+      <img alt="Statement Checker" className="absolute top-4 left-4 md:top-6 md:left-6 h-32 md:h-44 lg:h-56 w-auto z-10 drop-shadow-md mix-blend-multiply" src={logo} />
       <div className="relative w-full max-w-sm space-y-8">
       {/* Subtitle */}
         <div className="flex flex-col items-center">
