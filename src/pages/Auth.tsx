@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FileSpreadsheet, Loader2, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowLeft } from "lucide-react";
 import authBg from "@/assets/auth-bg.jpeg";
+import logo from "@/assets/logo.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -80,11 +81,8 @@ const Auth = () => {
       <div className="relative w-full max-w-sm space-y-8">
         {/* Logo */}
         <div className="flex flex-col items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-            <FileSpreadsheet className="h-7 w-7" />
-          </div>
-          <h1 className="text-2xl font-bold text-foreground">Statement Checker</h1>
-          <p className="text-sm text-muted-foreground text-center">{subtitle}</p>
+          <img src={logo} alt="Statement Checker" className="h-20 w-auto" />
+          <p className="text-base font-semibold text-foreground text-center">{subtitle}</p>
         </div>
 
         {/* Forgot password — sent state */}
@@ -153,9 +151,9 @@ const Auth = () => {
                   <div className="flex items-center justify-between">
                     <Label htmlFor="password">Password</Label>
                     {mode === "login" && (
-                      <button
+                       <button
                         type="button"
-                        className="text-xs text-muted-foreground underline-offset-4 hover:underline"
+                        className="text-sm font-medium text-foreground underline-offset-4 hover:underline"
                         onClick={() => { setMode("forgot"); setSent(false); }}
                       >
                         Forgot password?
@@ -184,22 +182,22 @@ const Auth = () => {
             </form>
 
             {mode === "forgot" ? (
-              <p className="text-center text-sm text-muted-foreground">
+              <p className="text-center text-base font-medium text-foreground">
                 <button
                   type="button"
-                  className="inline-flex items-center gap-1 font-medium text-primary underline-offset-4 hover:underline"
+                  className="inline-flex items-center gap-1 font-semibold text-primary underline-offset-4 hover:underline"
                   onClick={() => setMode("login")}
                 >
-                  <ArrowLeft className="h-3 w-3" />
+                  <ArrowLeft className="h-3.5 w-3.5" />
                   Back to sign in
                 </button>
               </p>
             ) : (
-              <p className="text-center text-sm text-muted-foreground">
+              <p className="text-center text-base font-medium text-foreground">
                 {mode === "login" ? "Don't have an account? " : "Already have an account? "}
                 <button
                   type="button"
-                  className="font-medium text-primary underline-offset-4 hover:underline"
+                  className="font-semibold text-primary underline-offset-4 hover:underline"
                   onClick={() => setMode(mode === "login" ? "signup" : "login")}
                 >
                   {mode === "login" ? "Sign up" : "Sign in"}
