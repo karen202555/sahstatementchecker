@@ -31,7 +31,7 @@ const Auth = () => {
     try {
       if (mode === "forgot") {
         const { error } = await supabase.auth.resetPasswordForEmail(form.email, {
-          redirectTo: `${getAppURL()}/reset-password`,
+          redirectTo: `${getAppURL()}/reset-password`
         });
         if (error) throw error;
         setSent(true);
@@ -45,18 +45,18 @@ const Auth = () => {
           password: form.password,
           options: {
             data: { display_name: form.displayName },
-            emailRedirectTo: getAppURL(),
-          },
+            emailRedirectTo: getAppURL()
+          }
         });
         if (error) throw error;
         toast({
           title: "Check your email",
-          description: "We sent you a confirmation link to activate your account.",
+          description: "We sent you a confirmation link to activate your account."
         });
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email: form.email,
-          password: form.password,
+          password: form.password
         });
         if (error) throw error;
         navigate("/");
@@ -69,11 +69,11 @@ const Auth = () => {
   };
 
   const subtitle =
-    mode === "login"
-      ? "Sign in to access your statements"
-      : mode === "signup"
-      ? "Create an account to get started"
-      : "Reset your password";
+  mode === "login" ?
+  "Sign in to access your statements" :
+  mode === "signup" ?
+  "Create an account to get started" :
+  "Reset your password";
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center bg-background px-4 overflow-hidden">
@@ -81,50 +81,50 @@ const Auth = () => {
       <div className="relative w-full max-w-sm space-y-8">
         {/* Logo */}
         <div className="flex flex-col items-center gap-3">
-          <img src={logo} alt="Statement Checker" className="h-20 w-auto" />
+          <img alt="Statement Checker" className="h-20 w-auto" src="/lovable-uploads/263f22f8-fe64-4aeb-8063-b91884509880.png" />
           <p className="text-base font-semibold text-foreground text-center">{subtitle}</p>
         </div>
 
         {/* Forgot password — sent state */}
-        {mode === "forgot" && sent ? (
-          <div className="space-y-4 text-center">
+        {mode === "forgot" && sent ?
+        <div className="space-y-4 text-center">
             <p className="text-sm text-muted-foreground">
               We've sent a password reset link to <strong>{form.email}</strong>. Check your inbox and follow the link to set a new password.
             </p>
             <Button
-              variant="ghost"
-              className="gap-2"
-              onClick={() => { setSent(false); setMode("login"); }}
-            >
+            variant="ghost"
+            className="gap-2"
+            onClick={() => {setSent(false);setMode("login");}}>
+
               <ArrowLeft className="h-4 w-4" />
               Back to sign in
             </Button>
-          </div>
-        ) : (
-          <>
+          </div> :
+
+        <>
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
-              {mode === "signup" && (
-                <>
+              {mode === "signup" &&
+            <>
                   <div className="space-y-1.5">
                     <Label htmlFor="displayName">Display name</Label>
                     <Input
-                      id="displayName"
-                      placeholder="Jane Smith"
-                      value={form.displayName}
-                      onChange={(e) => setForm((f) => ({ ...f, displayName: e.target.value }))}
-                      required
-                    />
+                  id="displayName"
+                  placeholder="Jane Smith"
+                  value={form.displayName}
+                  onChange={(e) => setForm((f) => ({ ...f, displayName: e.target.value }))}
+                  required />
+
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="inviteCode">Beta invite code</Label>
                     <Input
-                      id="inviteCode"
-                      placeholder="Enter your invite code"
-                      value={form.inviteCode}
-                      onChange={(e) => setForm((f) => ({ ...f, inviteCode: e.target.value }))}
-                      required
-                    />
+                  id="inviteCode"
+                  placeholder="Enter your invite code"
+                  value={form.inviteCode}
+                  onChange={(e) => setForm((f) => ({ ...f, inviteCode: e.target.value }))}
+                  required />
+
                     <p className="text-xs text-muted-foreground">
                       Don't have a code? Email{" "}
                       <a href="mailto:admin@statementchecker.au" className="text-primary underline-offset-4 hover:underline">
@@ -134,82 +134,81 @@ const Auth = () => {
                     </p>
                   </div>
                 </>
-              )}
+            }
               <div className="space-y-1.5">
                 <Label htmlFor="email">Email</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={form.email}
-                  onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-                  required
-                />
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+                value={form.email}
+                onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                required />
+
               </div>
-              {mode !== "forgot" && (
-                <div className="space-y-1.5">
+              {mode !== "forgot" &&
+            <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="password">Password</Label>
-                    {mode === "login" && (
-                       <button
-                        type="button"
-                        className="text-sm font-medium text-foreground underline-offset-4 hover:underline"
-                        onClick={() => { setMode("forgot"); setSent(false); }}
-                      >
+                    {mode === "login" &&
+                <button
+                  type="button"
+                  className="text-sm font-medium text-foreground underline-offset-4 hover:underline"
+                  onClick={() => {setMode("forgot");setSent(false);}}>
+
                         Forgot password?
                       </button>
-                    )}
+                }
                   </div>
                   <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={form.password}
-                    onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-                    required
-                    minLength={6}
-                  />
+                id="password"
+                type="password"
+                placeholder="••••••••"
+                value={form.password}
+                onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
+                required
+                minLength={6} />
+
                 </div>
-              )}
+            }
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-                {mode === "login"
-                  ? "Sign in"
-                  : mode === "signup"
-                  ? "Create account"
-                  : "Send reset link"}
+                {mode === "login" ?
+              "Sign in" :
+              mode === "signup" ?
+              "Create account" :
+              "Send reset link"}
               </Button>
             </form>
 
-            {mode === "forgot" ? (
-              <p className="text-center text-base font-medium text-foreground">
+            {mode === "forgot" ?
+          <p className="text-center text-base font-medium text-foreground">
                 <button
-                  type="button"
-                  className="inline-flex items-center gap-1 font-semibold text-primary underline-offset-4 hover:underline"
-                  onClick={() => setMode("login")}
-                >
+              type="button"
+              className="inline-flex items-center gap-1 font-semibold text-primary underline-offset-4 hover:underline"
+              onClick={() => setMode("login")}>
+
                   <ArrowLeft className="h-3.5 w-3.5" />
                   Back to sign in
                 </button>
-              </p>
-            ) : (
-              <p className="text-center text-base font-medium text-foreground">
+              </p> :
+
+          <p className="text-center text-base font-medium text-foreground">
                 {mode === "login" ? "Don't have an account? " : "Already have an account? "}
                 <button
-                  type="button"
-                  className="font-semibold text-primary underline-offset-4 hover:underline"
-                  onClick={() => setMode(mode === "login" ? "signup" : "login")}
-                >
+              type="button"
+              className="font-semibold text-primary underline-offset-4 hover:underline"
+              onClick={() => setMode(mode === "login" ? "signup" : "login")}>
+
                   {mode === "login" ? "Sign up" : "Sign in"}
                 </button>
               </p>
-            )}
+          }
           </>
-        )}
+        }
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 export default Auth;
-
