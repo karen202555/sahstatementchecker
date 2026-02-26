@@ -14,6 +14,18 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_users: {
+        Row: {
+          user_id: string
+        }
+        Insert: {
+          user_id: string
+        }
+        Update: {
+          user_id?: string
+        }
+        Relationships: []
+      }
       beta_feedback: {
         Row: {
           comment: string | null
@@ -68,6 +80,54 @@ export type Database = {
           preferred_decision?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      feedback: {
+        Row: {
+          attachments: string[] | null
+          created_at: string
+          feedback_type: string
+          id: string
+          internal_notes: string | null
+          message: string
+          page_url: string | null
+          priority: string | null
+          reporter_email: string | null
+          reporter_user_id: string
+          status: string
+          v1_go_live: boolean
+          wants_reply: boolean | null
+        }
+        Insert: {
+          attachments?: string[] | null
+          created_at?: string
+          feedback_type: string
+          id?: string
+          internal_notes?: string | null
+          message: string
+          page_url?: string | null
+          priority?: string | null
+          reporter_email?: string | null
+          reporter_user_id: string
+          status?: string
+          v1_go_live?: boolean
+          wants_reply?: boolean | null
+        }
+        Update: {
+          attachments?: string[] | null
+          created_at?: string
+          feedback_type?: string
+          id?: string
+          internal_notes?: string | null
+          message?: string
+          page_url?: string | null
+          priority?: string | null
+          reporter_email?: string | null
+          reporter_user_id?: string
+          status?: string
+          v1_go_live?: boolean
+          wants_reply?: boolean | null
         }
         Relationships: []
       }
@@ -178,7 +238,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
