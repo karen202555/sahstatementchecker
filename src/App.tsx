@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
+import FeedbackButton from "@/components/FeedbackButton";
 import Index from "./pages/Index";
 import Results from "./pages/Results";
 import NotFound from "./pages/NotFound";
@@ -11,6 +12,7 @@ import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import SettingsPage from "./pages/Settings";
 import Install from "./pages/Install";
+import AdminFeedback from "./pages/AdminFeedback";
 
 const queryClient = new QueryClient();
 
@@ -41,17 +43,21 @@ function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
 }
 
 const AppRoutes = () => (
-  <Routes>
-    <Route path="/auth" element={<PublicOnlyRoute><Auth /></PublicOnlyRoute>} />
-    {/* Reset password must be public — user arrives from email link, not logged in */}
-    <Route path="/reset-password" element={<ResetPassword />} />
-    <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-    <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
-    {/* Results is accessible without auth (shared links) */}
-    <Route path="/results" element={<Results />} />
-    <Route path="/install" element={<Install />} />
-    <Route path="*" element={<NotFound />} />
-  </Routes>
+  <>
+    <Routes>
+      <Route path="/auth" element={<PublicOnlyRoute><Auth /></PublicOnlyRoute>} />
+      {/* Reset password must be public — user arrives from email link, not logged in */}
+      <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+      <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+      <Route path="/admin/feedback" element={<ProtectedRoute><AdminFeedback /></ProtectedRoute>} />
+      {/* Results is accessible without auth (shared links) */}
+      <Route path="/results" element={<Results />} />
+      <Route path="/install" element={<Install />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+    <FeedbackButton />
+  </>
 );
 
 const App = () => (
