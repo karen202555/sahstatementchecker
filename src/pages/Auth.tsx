@@ -70,7 +70,7 @@ const Auth = () => {
 
   const subtitle =
   mode === "login" ?
-  "Sign in to access your statements" :
+  "Sign in to reconcile your providers statements" :
   mode === "signup" ?
   "Create an account to get started" :
   "Reset your password";
@@ -137,7 +137,7 @@ const Auth = () => {
                 </>
             }
               <div className="space-y-1.5">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email" className="font-bold">Email</Label>
                 <Input
                 id="email"
                 type="email"
@@ -150,11 +150,11 @@ const Auth = () => {
               {mode !== "forgot" &&
             <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="password">Password</Label>
+                    <Label htmlFor="password" className="font-bold">Password</Label>
                     {mode === "login" &&
                 <button
                   type="button"
-                  className="text-sm font-medium text-foreground underline-offset-4 hover:underline"
+                  className="text-sm font-bold text-foreground underline-offset-4 hover:underline"
                   onClick={() => {setMode("forgot");setSent(false);}}>
 
                         Forgot password?
@@ -194,7 +194,7 @@ const Auth = () => {
                 </button>
               </p> :
 
-          <p className="text-center text-base font-medium text-foreground">
+           <p className="text-center text-base font-bold text-foreground">
                 {mode === "login" ? "Don't have an account? " : "Already have an account? "}
                 <button
               type="button"
