@@ -1,43 +1,34 @@
 
-Goal: Fix the auth header visual so the logo sits appropriately in the top-left area without covering the page, while keeping the background image visible/transparent behind the form.
 
-1) What is currently wrong
-- The logo is set to `h-[30rem]`, which is far too large, especially on mobile.
-- The current logo rendering creates a big visual block over the page, making it look like the transparent background image is gone.
-- Positioning is technically top-left, but sizing/composition makes it feel broken.
+## Plan: Fix Auth Page Logo and Background
 
-2) Implementation plan
-- File: `src/pages/Auth.tsx`
-- Update the logo presentation from “giant hero image” to “top-left brand mark”.
+### What I will do
 
-Planned changes:
-- Keep the logo absolutely positioned in the top-left, but use sensible responsive sizing:
-  - Example target behavior: compact on mobile, larger on desktop (not screen-dominating).
-- Add safe spacing from edges so it feels intentionally placed:
-  - Top/left offsets that scale slightly with breakpoint.
-- Preserve layering so the background photo remains visible:
-  - Background image at lowest layer.
-  - Logo above background.
-  - Form content above both.
-- If the logo asset itself has a white matte/background, apply display styling that visually blends better with the page (e.g., blend/contain treatment) so it no longer appears as a giant white rectangle.
-- Keep the sign-in panel readable and unobstructed.
+1. **Replace the logo file** with the new uploaded image (green checkmark + magnifying glass).
+2. **Make the logo larger** — `h-24` on mobile, `md:h-36`, `lg:h-44` (roughly 96px → 144px → 176px). Clearly visible as a brand mark.
+3. **Remove the white background** on the logo using `mix-blend-multiply` so it blends naturally with the page.
+4. **Fix the background image** — increase opacity from `opacity-40` to `opacity-60` so the background photo is actually visible.
 
-3) Visual composition target
-- Top-left logo occupies roughly a small header-brand zone (not more than ~20–25% viewport width on mobile).
-- Background image remains clearly visible across full screen.
-- Form remains centered and fully readable with no overlap.
+### Changes
 
-4) Validation checklist (after implementation)
-- `/auth` mobile: logo is visibly in top-left and does not cover inputs or CTA.
-- `/auth` desktop/tablet: logo still top-left and proportionate.
-- Background image remains visible behind content.
-- No regression to login/signup/forgot-password behavior.
+**File 1: `src/assets/logo.png`**
+- Replace with the uploaded image (`ChatGPT_Image_Feb_26_2026_02_50_07_PM.png`).
 
-5) Technical details
-- Primary file: `src/pages/Auth.tsx`
-- Primary element to adjust: top-left `<img alt="Statement Checker" ... src={logo} />`
-- Class strategy:
-  - Replace fixed giant height (`h-[30rem]`) with responsive max-height/width classes.
-  - Keep `absolute` positioning with top-left offsets.
-  - Maintain explicit z-index ordering between background, logo, and form containers.
-  - Optionally add blend/contain utility classes if needed to neutralize white matte appearance from the asset.
+**File 2: `src/pages/Auth.tsx`** (two lines)
+
+Line ~80 — background image:
+```
+opacity-40  →  opacity-60
+```
+
+Line ~82 — logo img:
+```
+h-12 md:h-16 lg:h-20  →  h-24 md:h-36 lg:h-44
+```
+Add `mix-blend-multiply` class to visually remove white background from the logo.
+
+### Result
+- Large, clearly visible logo in top-left with no white rectangle around it.
+- Background photo visible behind the form.
+- Form stays centered and readable.
+
