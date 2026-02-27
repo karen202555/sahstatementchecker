@@ -50,7 +50,7 @@ const AppRoutes = () => (
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
-      <Route path="/admin/feedback" element={<ProtectedRoute><AdminFeedback /></ProtectedRoute>} />
+      <Route path="/admin-feedback" element={<ProtectedRoute><AdminFeedback /></ProtectedRoute>} />
       {/* Results is accessible without auth (shared links) */}
       <Route path="/results" element={<Results />} />
       <Route path="/install" element={<Install />} />
