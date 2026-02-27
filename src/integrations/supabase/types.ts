@@ -97,6 +97,7 @@ export type Database = {
           reporter_user_id: string
           status: string
           v1_go_live: boolean
+          version: string | null
           wants_reply: boolean | null
         }
         Insert: {
@@ -112,6 +113,7 @@ export type Database = {
           reporter_user_id: string
           status?: string
           v1_go_live?: boolean
+          version?: string | null
           wants_reply?: boolean | null
         }
         Update: {
@@ -127,6 +129,7 @@ export type Database = {
           reporter_user_id?: string
           status?: string
           v1_go_live?: boolean
+          version?: string | null
           wants_reply?: boolean | null
         }
         Relationships: []

@@ -14,7 +14,7 @@ const FeedbackButton = () => {
     <>
       <Button
         onClick={() => setOpen(true)}
-        className="fixed bottom-6 right-6 z-50 gap-2 rounded-full shadow-lg h-11 px-5 text-sm font-medium"
+        className="fixed bottom-6 right-6 z-50 gap-2 rounded-full shadow-lg h-11 px-5 text-sm font-medium bg-primary hover:bg-primary/90"
         size="sm"
       >
         <MessageSquare className="h-4 w-4" />

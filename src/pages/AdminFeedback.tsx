@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ChevronDown } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import Header from "@/components/Header";
@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -36,21 +35,18 @@ import { toast } from "@/hooks/use-toast";
 interface FeedbackRow {
   id: string;
   created_at: string;
-  reporter_user_id: string;
   reporter_email: string | null;
-  page_url: string | null;
   feedback_type: string;
   message: string;
   priority: string | null;
   attachments: string[] | null;
   status: string;
-  wants_reply: boolean;
-  v1_go_live: boolean;
   internal_notes: string | null;
+  version: string | null;
 }
 
 const STATUSES = ["New", "In Progress", "Resolved", "Closed", "Won't Fix"];
-const FEEDBACK_TYPES = ["Bug", "Confusing", "Feature request", "Improvement idea", "General thought", "Love this ❤️", "Something feels off", "Other"];
+const CATEGORIES = ["Something Broken", "Hard To Use", "Confusing", "Idea or Suggestion", "General Feedback"];
 
 const AdminFeedback = () => {
   const { user, loading: authLoading } = useAuth();
@@ -62,10 +58,9 @@ const AdminFeedback = () => {
 
   // Filters
   const [filterStatus, setFilterStatus] = useState("all");
-  const [filterType, setFilterType] = useState("all");
+  const [filterCategory, setFilterCategory] = useState("all");
   const [filterPriority, setFilterPriority] = useState("all");
 
-  // Check admin
   useEffect(() => {
     if (authLoading || !user) return;
     supabase
@@ -78,7 +73,6 @@ const AdminFeedback = () => {
       });
   }, [user, authLoading]);
 
-  // Fetch feedback
   useEffect(() => {
     if (isAdmin !== true) return;
     setLoading(true);
@@ -100,7 +94,7 @@ const AdminFeedback = () => {
 
   const filtered = feedback.filter((f) => {
     if (filterStatus !== "all" && f.status !== filterStatus) return false;
-    if (filterType !== "all" && f.feedback_type !== filterType) return false;
+    if (filterCategory !== "all" && f.feedback_type !== filterCategory) return false;
     if (filterPriority !== "all" && (f.priority ?? "None") !== filterPriority) return false;
     return true;
   });
@@ -117,19 +111,6 @@ const AdminFeedback = () => {
     setFeedback((prev) =>
       prev.map((f) => (f.id === id ? { ...f, [field]: value } : f))
     );
-  };
-
-  const getAttachmentUrl = (path: string) => {
-    const { data } = supabase.storage.from("feedback-uploads").getPublicUrl(path);
-    return data.publicUrl;
-  };
-
-  const getSignedUrl = async (path: string) => {
-    const { data, error } = await supabase.storage
-      .from("feedback-uploads")
-      .createSignedUrl(path, 3600);
-    if (error || !data) return null;
-    return data.signedUrl;
   };
 
   if (authLoading || isAdmin === null) {
@@ -174,11 +155,11 @@ const AdminFeedback = () => {
               {STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
             </SelectContent>
           </Select>
-          <Select value={filterType} onValueChange={setFilterType}>
-            <SelectTrigger className="w-[180px]"><SelectValue placeholder="Type" /></SelectTrigger>
+          <Select value={filterCategory} onValueChange={setFilterCategory}>
+            <SelectTrigger className="w-[180px]"><SelectValue placeholder="Category" /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
-              {FEEDBACK_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+              <SelectItem value="all">All Categories</SelectItem>
+              {CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
             </SelectContent>
           </Select>
           <Select value={filterPriority} onValueChange={setFilterPriority}>
@@ -188,7 +169,6 @@ const AdminFeedback = () => {
               <SelectItem value="High">High</SelectItem>
               <SelectItem value="Medium">Medium</SelectItem>
               <SelectItem value="Low">Low</SelectItem>
-              <SelectItem value="None">None</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -203,17 +183,18 @@ const AdminFeedback = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Date</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Message</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Category</TableHead>
                   <TableHead>Priority</TableHead>
+                  <TableHead>Message</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>V1</TableHead>
+                  <TableHead>Version</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filtered.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                       No feedback found.
                     </TableCell>
                   </TableRow>
@@ -227,10 +208,12 @@ const AdminFeedback = () => {
                       <TableCell className="whitespace-nowrap text-xs">
                         {new Date(f.created_at).toLocaleDateString()}
                       </TableCell>
+                      <TableCell className="text-xs max-w-[140px] truncate">
+                        {f.reporter_email ?? "—"}
+                      </TableCell>
                       <TableCell>
                         <Badge variant="secondary" className="text-xs">{f.feedback_type}</Badge>
                       </TableCell>
-                      <TableCell className="max-w-[300px] truncate text-sm">{f.message}</TableCell>
                       <TableCell>
                         {f.priority ? (
                           <Badge variant={f.priority === "High" ? "destructive" : "outline"} className="text-xs">
@@ -240,11 +223,12 @@ const AdminFeedback = () => {
                           <span className="text-xs text-muted-foreground">—</span>
                         )}
                       </TableCell>
+                      <TableCell className="max-w-[250px] truncate text-sm">{f.message}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className="text-xs">{f.status}</Badge>
                       </TableCell>
-                      <TableCell>
-                        {f.v1_go_live ? "✅" : "—"}
+                      <TableCell className="text-xs text-muted-foreground">
+                        {f.version ?? "—"}
                       </TableCell>
                     </TableRow>
                   ))
@@ -263,31 +247,19 @@ const AdminFeedback = () => {
                   <SheetTitle>Feedback Detail</SheetTitle>
                   <SheetDescription>
                     {new Date(selected.created_at).toLocaleString()} · {selected.feedback_type}
+                    {selected.version && ` · ${selected.version}`}
                   </SheetDescription>
                 </SheetHeader>
 
                 <div className="mt-6 space-y-5">
-                  {/* Message */}
                   <div>
                     <Label className="text-xs text-muted-foreground">Message</Label>
                     <p className="text-sm mt-1 whitespace-pre-wrap">{selected.message}</p>
                   </div>
 
-                  {/* Page URL */}
-                  {selected.page_url && (
-                    <div>
-                      <Label className="text-xs text-muted-foreground">Page URL</Label>
-                      <p className="text-sm mt-1 font-mono">{selected.page_url}</p>
-                    </div>
-                  )}
-
-                  {/* Reporter */}
                   <div>
                     <Label className="text-xs text-muted-foreground">Reporter</Label>
                     <p className="text-sm mt-1">{selected.reporter_email ?? "Unknown"}</p>
-                    {selected.wants_reply && (
-                      <Badge variant="outline" className="mt-1 text-xs">Wants reply</Badge>
-                    )}
                   </div>
 
                   {/* Attachments */}
@@ -296,23 +268,7 @@ const AdminFeedback = () => {
                       <Label className="text-xs text-muted-foreground">Attachments</Label>
                       <div className="mt-1 space-y-2">
                         {selected.attachments.map((path, i) => (
-                          <div key={i}>
-                            {path.match(/\.(png|jpg|jpeg|gif|webp)$/i) ? (
-                              <AttachmentImage path={path} />
-                            ) : (
-                              <Button
-                                variant="link"
-                                size="sm"
-                                className="text-xs p-0 h-auto"
-                                onClick={async () => {
-                                  const url = await getSignedUrl(path);
-                                  if (url) window.open(url, "_blank");
-                                }}
-                              >
-                                {path.split("/").pop()}
-                              </Button>
-                            )}
-                          </div>
+                          <AttachmentImage key={i} path={path} />
                         ))}
                       </div>
                     </div>
@@ -332,21 +288,9 @@ const AdminFeedback = () => {
                     </Select>
                   </div>
 
-                  {/* Editable: V1 Go-Live */}
-                  <div className="flex items-center gap-2">
-                    <Checkbox
-                      id="v1-go-live"
-                      checked={selected.v1_go_live}
-                      onCheckedChange={(c) => updateField(selected.id, "v1_go_live", !!c)}
-                    />
-                    <label htmlFor="v1-go-live" className="text-sm font-medium">
-                      V1.0 Go-Live (Admin)
-                    </label>
-                  </div>
-
-                  {/* Editable: Internal Notes */}
+                  {/* Editable: Admin Notes */}
                   <div className="space-y-2">
-                    <Label>Internal Notes</Label>
+                    <Label>Admin Notes</Label>
                     <Textarea
                       value={selected.internal_notes ?? ""}
                       onChange={(e) => {
@@ -370,7 +314,6 @@ const AdminFeedback = () => {
   );
 };
 
-// Sub-component for image attachments with signed URLs
 function AttachmentImage({ path }: { path: string }) {
   const [url, setUrl] = useState<string | null>(null);
   useEffect(() => {
