@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import FeedbackButton from "@/components/FeedbackButton";
+import AppFooter from "@/components/AppFooter";
 import Index from "./pages/Index";
 import Results from "./pages/Results";
 import NotFound from "./pages/NotFound";
@@ -15,6 +16,7 @@ import Install from "./pages/Install";
 import AdminFeedback from "./pages/AdminFeedback";
 import ProductStatus from "./pages/ProductStatus";
 import AdminFeatures from "./pages/AdminFeatures";
+import AdminVersion from "./pages/AdminVersion";
 
 const queryClient = new QueryClient();
 
@@ -55,11 +57,13 @@ const AppRoutes = () => (
       <Route path="/admin-feedback" element={<ProtectedRoute><AdminFeedback /></ProtectedRoute>} />
       <Route path="/product-status" element={<ProtectedRoute><ProductStatus /></ProtectedRoute>} />
       <Route path="/admin-features" element={<ProtectedRoute><AdminFeatures /></ProtectedRoute>} />
+      <Route path="/admin-version" element={<ProtectedRoute><AdminVersion /></ProtectedRoute>} />
       {/* Results is accessible without auth (shared links) */}
       <Route path="/results" element={<Results />} />
       <Route path="/install" element={<Install />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
+    <AppFooter />
     <FeedbackButton />
   </>
 );
