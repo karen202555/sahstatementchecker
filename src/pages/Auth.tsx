@@ -71,19 +71,16 @@ const Auth = () => {
   // heading text is inline in JSX
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-end px-4 overflow-hidden">
-      <img src={authBg} alt="" className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
+    <div className="relative flex min-h-screen flex-col items-center justify-center px-4 overflow-auto">
+      <img src={authBg} alt="" className="absolute inset-0 w-full h-full object-cover object-top pointer-events-none" />
 
       {/* Logo — top center */}
-      <div className="relative z-10 mt-6 mb-6 flex justify-center">
-        <img alt="Statement Checker" className="h-20 md:h-24 w-auto drop-shadow-md" src={logo} />
+      <div className="relative z-10 mt-8 mb-4 flex justify-center">
+        <img alt="Statement Checker" className="w-[200px] md:w-[240px] h-auto drop-shadow-md" src={logo} />
       </div>
 
-      {/* Spacer to push panel lower — face stays visible */}
-      <div className="flex-1 min-h-[15vh] md:min-h-[25vh]" />
-
       {/* Login card */}
-      <div className="relative z-10 w-full max-w-[380px] rounded-lg bg-white/95 shadow-lg p-6 mb-8 md:mb-12 backdrop-blur-sm">
+      <div className="relative z-10 w-[90%] max-w-[380px] rounded-lg bg-white/95 shadow-lg p-5 mb-10 backdrop-blur-sm">
         <div className="flex flex-col items-center mb-4">
           <h1 className="text-xl font-semibold text-foreground text-center">
             {mode === "login" ? "Sign in to check your provider statements" : mode === "signup" ? "Create an account to get started" : "Reset your password"}
@@ -217,9 +214,6 @@ const Auth = () => {
           </>
         }
       </div>
-
-      {/* Bottom spacer */}
-      <div className="h-4" />
     </div>);
 
 };
