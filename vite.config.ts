@@ -21,9 +21,9 @@ export default defineConfig(({ mode }) => ({
       includeAssets: ["favicon.ico", "pwa-192x192.png", "pwa-512x512.png"],
       manifest: {
         name: "Statement Checker",
-        short_name: "StatCheck",
+        short_name: "StatementChecker",
         description: "Upload your provider statements and instantly spot overcharges.",
-        theme_color: "#1e3a5f",
+        theme_color: "#2aa198",
         background_color: "#ffffff",
         display: "standalone",
         scope: "/",
