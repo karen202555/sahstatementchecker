@@ -32,16 +32,11 @@ const Settings = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Display name
   const [displayName, setDisplayName] = useState("");
   const [savingName, setSavingName] = useState(false);
-
-  // Password
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [savingPassword, setSavingPassword] = useState(false);
-
-  // Language
   const [language, setLanguage] = useState("en");
   const [savingLanguage, setSavingLanguage] = useState(false);
 
@@ -60,12 +55,8 @@ const Settings = () => {
     }
     setSavingName(true);
     try {
-      const { error: dbError } = await supabase
-        .from("profiles")
-        .update({ display_name: trimmed })
-        .eq("id", user!.id);
+      const { error: dbError } = await supabase.from("profiles").update({ display_name: trimmed }).eq("id", user!.id);
       if (dbError) throw dbError;
-
       await supabase.auth.updateUser({ data: { display_name: trimmed } });
       toast({ title: "Display name updated" });
     } catch (e: any) {
@@ -102,10 +93,7 @@ const Settings = () => {
     setLanguage(value);
     setSavingLanguage(true);
     try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ preferred_language: value } as any)
-        .eq("id", user!.id);
+      const { error } = await supabase.from("profiles").update({ preferred_language: value } as any).eq("id", user!.id);
       if (error) throw error;
       toast({ title: "Language preference saved" });
     } catch (e: any) {
@@ -118,7 +106,7 @@ const Settings = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="container mx-auto max-w-2xl px-4 py-8 space-y-6">
+      <main className="mx-auto max-w-[1100px] px-4 md:px-6 py-6 space-y-6">
         <button
           onClick={() => navigate("/")}
           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -127,85 +115,64 @@ const Settings = () => {
           Back
         </button>
 
-        <h1 className="text-2xl font-bold text-foreground">Settings</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Settings</h1>
 
-        {/* Display Name */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Display Name</CardTitle>
-            <CardDescription>This is how your name appears in the app.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="display-name">Name</Label>
-              <Input
-                id="display-name"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                maxLength={100}
-                placeholder="Your display name"
-              />
-            </div>
-            <Button onClick={handleSaveName} disabled={savingName} size="sm">
-              {savingName ? "Saving…" : "Save"}
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="max-w-2xl space-y-5">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg font-medium">Display Name</CardTitle>
+              <CardDescription>This is how your name appears in the app.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="display-name">Name</Label>
+                <Input id="display-name" value={displayName} onChange={(e) => setDisplayName(e.target.value)} maxLength={100} placeholder="Your display name" className="h-11" />
+              </div>
+              <Button onClick={handleSaveName} disabled={savingName} className="h-11 px-4 rounded-md">
+                {savingName ? "Saving…" : "Save"}
+              </Button>
+            </CardContent>
+          </Card>
 
-        {/* Change Password */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Change Password</CardTitle>
-            <CardDescription>Update your account password.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="new-password">New Password</Label>
-              <Input
-                id="new-password"
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Minimum 6 characters"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirm-password">Confirm Password</Label>
-              <Input
-                id="confirm-password"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Re-enter new password"
-              />
-            </div>
-            <Button onClick={handleChangePassword} disabled={savingPassword} size="sm">
-              {savingPassword ? "Updating…" : "Update Password"}
-            </Button>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg font-medium">Change Password</CardTitle>
+              <CardDescription>Update your account password.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="new-password">New Password</Label>
+                <Input id="new-password" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Minimum 6 characters" className="h-11" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirm-password">Confirm Password</Label>
+                <Input id="confirm-password" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Re-enter new password" className="h-11" />
+              </div>
+              <Button onClick={handleChangePassword} disabled={savingPassword} className="h-11 px-4 rounded-md">
+                {savingPassword ? "Updating…" : "Update Password"}
+              </Button>
+            </CardContent>
+          </Card>
 
-        {/* Preferred Language */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Preferred Language</CardTitle>
-            <CardDescription>Choose your display language. More languages coming soon.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Select value={language} onValueChange={handleSaveLanguage} disabled={savingLanguage}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {LANGUAGES.map((lang) => (
-                  <SelectItem key={lang.code} value={lang.code}>
-                    {lang.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg font-medium">Preferred Language</CardTitle>
+              <CardDescription>Choose your display language.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Select value={language} onValueChange={handleSaveLanguage} disabled={savingLanguage}>
+                <SelectTrigger className="w-[200px] h-11">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {LANGUAGES.map((lang) => (
+                    <SelectItem key={lang.code} value={lang.code}>{lang.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </CardContent>
+          </Card>
+        </div>
       </main>
     </div>
   );

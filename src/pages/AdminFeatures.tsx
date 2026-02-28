@@ -36,11 +36,9 @@ const AdminFeatures = () => {
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Edit state
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ feature_name: "", description: "", status: "Live", sort_order: 100 });
 
-  // New feature state
   const [showNew, setShowNew] = useState(false);
   const [newForm, setNewForm] = useState({ feature_name: "", description: "", status: "Live", sort_order: 100 });
 
@@ -105,9 +103,9 @@ const AdminFeatures = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <main className="container mx-auto max-w-2xl px-4 py-16 text-center">
-          <h1 className="text-xl font-bold text-foreground mb-2">Access Denied</h1>
-          <p className="text-muted-foreground">You do not have permission to access this page.</p>
+        <main className="mx-auto max-w-[1100px] px-4 md:px-6 py-16 text-center">
+          <h1 className="text-2xl font-semibold text-foreground">Access Denied</h1>
+          <p className="text-sm text-muted-foreground mt-2">You do not have permission to access this page.</p>
         </main>
       </div>
     );
@@ -116,53 +114,53 @@ const AdminFeatures = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="container mx-auto max-w-4xl px-4 py-8 space-y-6">
+      <main className="mx-auto max-w-[1100px] px-4 md:px-6 py-6 space-y-6">
         <button onClick={() => navigate("/")} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
           <ArrowLeft className="h-4 w-4" /> Back
         </button>
 
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-foreground">Manage Features</h1>
-          <Button size="sm" onClick={() => setShowNew(true)} disabled={showNew}>
+          <h1 className="text-2xl font-semibold text-foreground">Manage Features</h1>
+          <Button onClick={() => setShowNew(true)} disabled={showNew} className="gap-2 h-11 px-4 rounded-md">
             <Plus className="h-4 w-4" /> Add Feature
           </Button>
         </div>
 
-        {/* New feature form */}
         {showNew && (
           <Card>
-            <CardHeader><CardTitle className="text-lg">New Feature</CardTitle></CardHeader>
-            <CardContent className="space-y-3">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div className="space-y-1">
+            <CardHeader>
+              <CardTitle className="text-lg font-medium">New Feature</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
                   <Label>Name</Label>
-                  <Input value={newForm.feature_name} onChange={(e) => setNewForm({ ...newForm, feature_name: e.target.value })} />
+                  <Input value={newForm.feature_name} onChange={(e) => setNewForm({ ...newForm, feature_name: e.target.value })} className="h-11" />
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-2">
                   <Label>Status</Label>
                   <Select value={newForm.status} onValueChange={(v) => setNewForm({ ...newForm, status: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
                     <SelectContent>{STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
               </div>
-              <div className="space-y-1">
+              <div className="space-y-2">
                 <Label>Description</Label>
                 <Textarea value={newForm.description} onChange={(e) => setNewForm({ ...newForm, description: e.target.value })} rows={2} />
               </div>
-              <div className="space-y-1 max-w-[120px]">
+              <div className="space-y-2 max-w-[120px]">
                 <Label>Sort Order</Label>
-                <Input type="number" value={newForm.sort_order} onChange={(e) => setNewForm({ ...newForm, sort_order: Number(e.target.value) })} />
+                <Input type="number" value={newForm.sort_order} onChange={(e) => setNewForm({ ...newForm, sort_order: Number(e.target.value) })} className="h-11" />
               </div>
               <div className="flex gap-2">
-                <Button size="sm" onClick={handleCreate}><Save className="h-4 w-4" /> Save</Button>
-                <Button size="sm" variant="ghost" onClick={() => setShowNew(false)}><X className="h-4 w-4" /> Cancel</Button>
+                <Button onClick={handleCreate} className="gap-2 h-11 px-4 rounded-md"><Save className="h-4 w-4" /> Save</Button>
+                <Button variant="outline" onClick={() => setShowNew(false)} className="gap-2 h-11 px-4 rounded-md"><X className="h-4 w-4" /> Cancel</Button>
               </div>
             </CardContent>
           </Card>
         )}
 
-        {/* Features table */}
         <Card>
           <CardContent className="p-0">
             <Table>
@@ -180,14 +178,14 @@ const AdminFeatures = () => {
                     {editingId === f.id ? (
                       <>
                         <TableCell>
-                          <Input type="number" className="w-16" value={editForm.sort_order} onChange={(e) => setEditForm({ ...editForm, sort_order: Number(e.target.value) })} />
+                          <Input type="number" className="w-16 h-11" value={editForm.sort_order} onChange={(e) => setEditForm({ ...editForm, sort_order: Number(e.target.value) })} />
                         </TableCell>
                         <TableCell>
-                          <Input value={editForm.feature_name} onChange={(e) => setEditForm({ ...editForm, feature_name: e.target.value })} />
+                          <Input value={editForm.feature_name} onChange={(e) => setEditForm({ ...editForm, feature_name: e.target.value })} className="h-11" />
                         </TableCell>
                         <TableCell>
                           <Select value={editForm.status} onValueChange={(v) => setEditForm({ ...editForm, status: v })}>
-                            <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
+                            <SelectTrigger className="w-[140px] h-11"><SelectValue /></SelectTrigger>
                             <SelectContent>{STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
                           </Select>
                         </TableCell>
@@ -198,10 +196,10 @@ const AdminFeatures = () => {
                       </>
                     ) : (
                       <>
-                        <TableCell className="text-muted-foreground text-xs">{f.sort_order}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{f.sort_order}</TableCell>
                         <TableCell>
-                          <div className="font-medium text-sm">{f.feature_name}</div>
-                          {f.description && <div className="text-xs text-muted-foreground">{f.description}</div>}
+                          <div className="text-sm font-medium">{f.feature_name}</div>
+                          {f.description && <div className="text-sm text-muted-foreground">{f.description}</div>}
                         </TableCell>
                         <TableCell><Badge variant="outline" className="text-xs">{f.status}</Badge></TableCell>
                         <TableCell className="text-right space-x-1">
