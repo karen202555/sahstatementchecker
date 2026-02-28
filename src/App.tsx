@@ -13,6 +13,8 @@ import ResetPassword from "./pages/ResetPassword";
 import SettingsPage from "./pages/Settings";
 import Install from "./pages/Install";
 import AdminFeedback from "./pages/AdminFeedback";
+import ProductStatus from "./pages/ProductStatus";
+import AdminFeatures from "./pages/AdminFeatures";
 
 const queryClient = new QueryClient();
 
@@ -51,6 +53,8 @@ const AppRoutes = () => (
       <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
       <Route path="/admin-feedback" element={<ProtectedRoute><AdminFeedback /></ProtectedRoute>} />
+      <Route path="/product-status" element={<ProtectedRoute><ProductStatus /></ProtectedRoute>} />
+      <Route path="/admin-features" element={<ProtectedRoute><AdminFeatures /></ProtectedRoute>} />
       {/* Results is accessible without auth (shared links) */}
       <Route path="/results" element={<Results />} />
       <Route path="/install" element={<Install />} />
