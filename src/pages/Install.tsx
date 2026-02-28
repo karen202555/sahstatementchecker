@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Download, Share, CheckCircle2, Smartphone } from "lucide-react";
 
 interface BeforeInstallPromptEvent extends Event {
@@ -45,58 +46,60 @@ export default function Install() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="mx-auto max-w-md text-center space-y-6">
-        <div className="flex justify-center">
-          <div className="rounded-2xl bg-primary/10 p-4">
-            <Smartphone className="h-12 w-12 text-primary" />
+      <Card className="mx-auto max-w-md w-full">
+        <CardContent className="p-6 text-center space-y-6">
+          <div className="flex justify-center">
+            <div className="rounded-2xl bg-accent p-4">
+              <Smartphone className="h-10 w-10 text-primary" />
+            </div>
           </div>
-        </div>
 
-        <h1 className="text-3xl font-bold tracking-tight">Install Statement Checker</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Install Statement Checker</h1>
 
-        {isInstalled ? (
-          <div className="space-y-3">
-            <CheckCircle2 className="mx-auto h-16 w-16 text-green-500" />
-            <p className="text-muted-foreground">
-              Statement Checker is already installed! Open it from your home screen.
+          {isInstalled ? (
+            <div className="space-y-3">
+              <CheckCircle2 className="mx-auto h-12 w-12 text-emerald-500" />
+              <p className="text-sm text-muted-foreground">
+                Statement Checker is already installed! Open it from your home screen.
+              </p>
+            </div>
+          ) : isIOS ? (
+            <div className="space-y-4 text-left">
+              <p className="text-sm text-muted-foreground text-center">
+                To install on your iPhone or iPad:
+              </p>
+              <ol className="space-y-3 text-sm text-muted-foreground">
+                <li className="flex items-start gap-3">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-semibold">1</span>
+                  <span>Tap the <Share className="inline h-4 w-4 -mt-0.5" /> <strong>Share</strong> button in Safari</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-semibold">2</span>
+                  <span>Scroll down and tap <strong>"Add to Home Screen"</strong></span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-semibold">3</span>
+                  <span>Tap <strong>"Add"</strong> to confirm</span>
+                </li>
+              </ol>
+            </div>
+          ) : deferredPrompt ? (
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Install for quick access, offline support, and a native app experience.
+              </p>
+              <Button onClick={handleInstall} className="gap-2 h-11 px-4 rounded-md">
+                <Download className="h-4 w-4" />
+                Install App
+              </Button>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Open this page in Chrome, Edge, or Safari to install Statement Checker.
             </p>
-          </div>
-        ) : isIOS ? (
-          <div className="space-y-4 text-left">
-            <p className="text-muted-foreground text-center">
-              To install on your iPhone or iPad:
-            </p>
-            <ol className="space-y-3 text-sm text-muted-foreground">
-              <li className="flex items-start gap-3">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">1</span>
-                <span>Tap the <Share className="inline h-4 w-4 -mt-0.5" /> <strong>Share</strong> button in Safari's toolbar</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">2</span>
-                <span>Scroll down and tap <strong>"Add to Home Screen"</strong></span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">3</span>
-                <span>Tap <strong>"Add"</strong> to confirm</span>
-              </li>
-            </ol>
-          </div>
-        ) : deferredPrompt ? (
-          <div className="space-y-4">
-            <p className="text-muted-foreground">
-              Install Statement Checker on your device for quick access, offline support, and a native app experience.
-            </p>
-            <Button size="lg" onClick={handleInstall} className="gap-2">
-              <Download className="h-5 w-5" />
-              Install App
-            </Button>
-          </div>
-        ) : (
-          <p className="text-muted-foreground">
-            Open this page in Chrome, Edge, or Safari to install Statement Checker on your device.
-          </p>
-        )}
-      </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

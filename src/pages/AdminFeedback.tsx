@@ -8,27 +8,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
 } from "@/components/ui/sheet";
 import { toast } from "@/hooks/use-toast";
 
@@ -56,7 +44,6 @@ const AdminFeedback = () => {
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  // Filters
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterCategory, setFilterCategory] = useState("all");
   const [filterPriority, setFilterPriority] = useState("all");
@@ -125,10 +112,10 @@ const AdminFeedback = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <main className="container mx-auto px-6 py-20 text-center">
-          <h1 className="text-2xl font-bold text-foreground">Access Denied</h1>
-          <p className="text-muted-foreground mt-2">You do not have admin access.</p>
-          <Button variant="outline" className="mt-4" onClick={() => navigate("/")}>Go Home</Button>
+        <main className="mx-auto max-w-[1100px] px-4 md:px-6 py-16 text-center">
+          <h1 className="text-2xl font-semibold text-foreground">Access Denied</h1>
+          <p className="text-sm text-muted-foreground mt-2">You do not have admin access.</p>
+          <Button variant="outline" className="mt-4 h-11 px-4 rounded-md" onClick={() => navigate("/")}>Go Home</Button>
         </main>
       </div>
     );
@@ -137,33 +124,34 @@ const AdminFeedback = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="container mx-auto px-6 py-5">
-        <div className="flex items-center gap-4 mb-5">
-          <Button variant="ghost" onClick={() => navigate("/")} className="gap-1.5">
-            <ArrowLeft className="h-4 w-4" /> Back
-          </Button>
-          <h1 className="text-2xl font-bold text-foreground">Feedback Admin</h1>
+      <main className="mx-auto max-w-[1100px] px-4 md:px-6 py-6 space-y-6">
+        <button onClick={() => navigate("/")} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <ArrowLeft className="h-4 w-4" /> Back
+        </button>
+
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-semibold text-foreground">Feedback Admin</h1>
           <span className="text-sm text-muted-foreground">{feedback.length} total</span>
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap gap-3 mb-4">
+        <div className="flex flex-wrap gap-3">
           <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="w-[150px]"><SelectValue placeholder="Status" /></SelectTrigger>
+            <SelectTrigger className="w-[160px] h-11"><SelectValue placeholder="Status" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Statuses</SelectItem>
               {STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
             </SelectContent>
           </Select>
           <Select value={filterCategory} onValueChange={setFilterCategory}>
-            <SelectTrigger className="w-[180px]"><SelectValue placeholder="Category" /></SelectTrigger>
+            <SelectTrigger className="w-[180px] h-11"><SelectValue placeholder="Category" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Categories</SelectItem>
               {CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
             </SelectContent>
           </Select>
           <Select value={filterPriority} onValueChange={setFilterPriority}>
-            <SelectTrigger className="w-[150px]"><SelectValue placeholder="Priority" /></SelectTrigger>
+            <SelectTrigger className="w-[160px] h-11"><SelectValue placeholder="Priority" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Priorities</SelectItem>
               <SelectItem value="High">High</SelectItem>
@@ -178,64 +166,62 @@ const AdminFeedback = () => {
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
           </div>
         ) : (
-          <div className="rounded-lg border overflow-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Priority</TableHead>
-                  <TableHead>Message</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Version</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.length === 0 ? (
+          <Card>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                      No feedback found.
-                    </TableCell>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Priority</TableHead>
+                    <TableHead>Message</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Version</TableHead>
                   </TableRow>
-                ) : (
-                  filtered.map((f) => (
-                    <TableRow
-                      key={f.id}
-                      className="cursor-pointer"
-                      onClick={() => setSelectedId(f.id)}
-                    >
-                      <TableCell className="whitespace-nowrap text-xs">
-                        {new Date(f.created_at).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell className="text-xs max-w-[140px] truncate">
-                        {f.reporter_email ?? "—"}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary" className="text-xs">{f.feedback_type}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        {f.priority ? (
-                          <Badge variant={f.priority === "High" ? "destructive" : "outline"} className="text-xs">
-                            {f.priority}
-                          </Badge>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="max-w-[250px] truncate text-sm">{f.message}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="text-xs">{f.status}</Badge>
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {f.version ?? "—"}
+                </TableHeader>
+                <TableBody>
+                  {filtered.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8 text-sm text-muted-foreground">
+                        No feedback found.
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                  ) : (
+                    filtered.map((f) => (
+                      <TableRow key={f.id} className="cursor-pointer" onClick={() => setSelectedId(f.id)}>
+                        <TableCell className="whitespace-nowrap text-sm">
+                          {new Date(f.created_at).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell className="text-sm max-w-[140px] truncate">
+                          {f.reporter_email ?? "—"}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className="text-xs">{f.feedback_type}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          {f.priority ? (
+                            <Badge variant={f.priority === "High" ? "destructive" : "outline"} className="text-xs">
+                              {f.priority}
+                            </Badge>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="max-w-[250px] truncate text-sm">{f.message}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="text-xs">{f.status}</Badge>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {f.version ?? "—"}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
         )}
 
         {/* Detail drawer */}
@@ -253,19 +239,18 @@ const AdminFeedback = () => {
 
                 <div className="mt-6 space-y-5">
                   <div>
-                    <Label className="text-xs text-muted-foreground">Message</Label>
+                    <Label className="text-sm text-muted-foreground">Message</Label>
                     <p className="text-sm mt-1 whitespace-pre-wrap">{selected.message}</p>
                   </div>
 
                   <div>
-                    <Label className="text-xs text-muted-foreground">Reporter</Label>
+                    <Label className="text-sm text-muted-foreground">Reporter</Label>
                     <p className="text-sm mt-1">{selected.reporter_email ?? "Unknown"}</p>
                   </div>
 
-                  {/* Attachments */}
                   {selected.attachments && selected.attachments.length > 0 && (
                     <div>
-                      <Label className="text-xs text-muted-foreground">Attachments</Label>
+                      <Label className="text-sm text-muted-foreground">Attachments</Label>
                       <div className="mt-1 space-y-2">
                         {selected.attachments.map((path, i) => (
                           <AttachmentImage key={i} path={path} />
@@ -274,21 +259,16 @@ const AdminFeedback = () => {
                     </div>
                   )}
 
-                  {/* Editable: Status */}
                   <div className="space-y-2">
                     <Label>Status</Label>
-                    <Select
-                      value={selected.status}
-                      onValueChange={(v) => updateField(selected.id, "status", v)}
-                    >
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                    <Select value={selected.status} onValueChange={(v) => updateField(selected.id, "status", v)}>
+                      <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
 
-                  {/* Editable: Admin Notes */}
                   <div className="space-y-2">
                     <Label>Admin Notes</Label>
                     <Textarea
@@ -302,6 +282,7 @@ const AdminFeedback = () => {
                       onBlur={() => updateField(selected.id, "internal_notes", selected.internal_notes)}
                       rows={4}
                       placeholder="Internal notes (not visible to users)..."
+                      className="min-h-[120px]"
                     />
                   </div>
                 </div>
