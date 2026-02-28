@@ -217,6 +217,9 @@ const Auth = () => {
           </>
         }
       </div>
+
+      {/* Photo credit */}
+      <p className="relative z-10 mt-4 mb-6 text-sm text-white/60">Photo: Dad (Tony)</p>
     </div>);
 
 };
