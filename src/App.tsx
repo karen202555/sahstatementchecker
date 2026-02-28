@@ -17,6 +17,9 @@ import AdminFeedback from "./pages/AdminFeedback";
 import ProductStatus from "./pages/ProductStatus";
 import AdminFeatures from "./pages/AdminFeatures";
 import AdminVersion from "./pages/AdminVersion";
+import About from "./pages/About";
+import Beta from "./pages/Beta";
+import Features from "./pages/Features";
 
 const queryClient = new QueryClient();
 
@@ -61,6 +64,9 @@ const AppRoutes = () => (
       {/* Results is accessible without auth (shared links) */}
       <Route path="/results" element={<Results />} />
       <Route path="/install" element={<Install />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/beta" element={<Beta />} />
+      <Route path="/features" element={<Features />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
     <AppFooter />
