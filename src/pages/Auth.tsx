@@ -68,22 +68,31 @@ const Auth = () => {
     }
   };
 
-  const subtitle =
-  mode === "login" ?
-  "Sign in to reconcile your providers statements" :
-  mode === "signup" ?
-  "Create an account to get started" :
-  "Reset your password";
+  // heading text is inline in JSX
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-end pb-12 md:justify-center md:pb-0 md:pt-24 bg-background px-4 overflow-hidden">
-      <img src={authBg} alt="" className="absolute inset-0 w-full h-full object-cover opacity-60 pointer-events-none" />
-      {/* Logo — top left */}
-      <img alt="Statement Checker" className="absolute top-4 left-4 md:top-6 md:left-6 h-32 md:h-44 lg:h-56 w-auto z-10 drop-shadow-md mix-blend-multiply" src={logo} />
-      <div className="relative w-full max-w-sm space-y-8">
-      {/* Subtitle */}
-        <div className="flex flex-col items-center">
-          <p className="text-base font-semibold text-foreground text-center">{subtitle}</p>
+    <div className="relative flex min-h-screen flex-col items-center justify-end px-4 overflow-hidden">
+      <img src={authBg} alt="" className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
+
+      {/* Logo — top center */}
+      <div className="relative z-10 mt-6 mb-6 flex justify-center">
+        <img alt="Statement Checker" className="h-20 md:h-24 w-auto drop-shadow-md" src={logo} />
+      </div>
+
+      {/* Spacer to push panel lower — face stays visible */}
+      <div className="flex-1 min-h-[15vh] md:min-h-[25vh]" />
+
+      {/* Login card */}
+      <div className="relative z-10 w-full max-w-[380px] rounded-lg bg-white/95 shadow-lg p-6 mb-8 md:mb-12 backdrop-blur-sm">
+        <div className="flex flex-col items-center mb-4">
+          <h1 className="text-xl font-semibold text-foreground text-center">
+            {mode === "login" ? "Sign in to check your provider statements" : mode === "signup" ? "Create an account to get started" : "Reset your password"}
+          </h1>
+          {mode === "login" && (
+            <p className="text-sm text-muted-foreground text-center mt-2">
+              Statement Checker helps you understand your statements and identify discrepancies.
+            </p>
+          )}
         </div>
 
         {/* Forgot password — sent state */}
@@ -175,10 +184,10 @@ const Auth = () => {
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading && <Loader2 className="h-4 w-4 animate-spin" />}
                 {mode === "login" ?
-              "Sign in" :
+              "Sign In" :
               mode === "signup" ?
-              "Create account" :
-              "Send reset link"}
+              "Create Account" :
+              "Send Reset Link"}
               </Button>
             </form>
 
@@ -208,6 +217,9 @@ const Auth = () => {
           </>
         }
       </div>
+
+      {/* Bottom spacer */}
+      <div className="h-4" />
     </div>);
 
 };
