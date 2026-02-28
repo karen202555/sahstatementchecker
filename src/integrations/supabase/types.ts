@@ -26,6 +26,21 @@ export type Database = {
         }
         Relationships: []
       }
+      app_meta: {
+        Row: {
+          key: string
+          value: string
+        }
+        Insert: {
+          key: string
+          value: string
+        }
+        Update: {
+          key?: string
+          value?: string
+        }
+        Relationships: []
+      }
       beta_feedback: {
         Row: {
           comment: string | null
@@ -80,6 +95,36 @@ export type Database = {
           preferred_decision?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      features: {
+        Row: {
+          created_at: string
+          description: string | null
+          feature_name: string
+          id: string
+          sort_order: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          feature_name: string
+          id?: string
+          sort_order?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          feature_name?: string
+          id?: string
+          sort_order?: number
+          status?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -155,6 +200,27 @@ export type Database = {
           id?: string
           preferred_language?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      recent_changes: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          sort_order?: number
         }
         Relationships: []
       }
