@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Table as TableIcon, CalendarDays, Download, Printer, PieChart, ShieldAlert, Share2, FileDown, Eraser, AlertTriangle, Copy, Mail, FileText } from "lucide-react";
-import Header from "@/components/Header";
+
 import TransactionsTable from "@/components/TransactionsTable";
 import TransactionCalendar from "@/components/TransactionCalendar";
 import SpendingSummary from "@/components/SpendingSummary";
@@ -113,7 +113,6 @@ const Results = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
       <main className="mx-auto max-w-[1100px] px-4 md:px-6 py-6">
         {/* Top bar */}
         <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 no-print">

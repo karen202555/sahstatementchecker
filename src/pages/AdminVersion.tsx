@@ -4,7 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import Header from "@/components/Header";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -56,7 +56,6 @@ const AdminVersion = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        <Header />
         <div className="flex items-center justify-center py-20">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
         </div>
@@ -66,20 +65,15 @@ const AdminVersion = () => {
 
   if (!isAdmin) {
     return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <main className="mx-auto max-w-[1100px] px-4 md:px-6 py-16 text-center">
-          <h1 className="text-2xl font-semibold text-foreground">Access Denied</h1>
-          <p className="text-sm text-muted-foreground mt-2">You do not have permission to access this page.</p>
-        </main>
+      <div className="mx-auto max-w-[1100px] px-4 md:px-6 py-16 text-center">
+        <h1 className="text-2xl font-semibold text-foreground">Access Denied</h1>
+        <p className="text-sm text-muted-foreground mt-2">You do not have permission to access this page.</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <main className="mx-auto max-w-[1100px] px-4 md:px-6 py-6 space-y-6">
+    <div className="mx-auto max-w-[1100px] px-4 md:px-6 py-6 space-y-6">
         <button onClick={() => navigate("/")} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
           <ArrowLeft className="h-4 w-4" /> Back
         </button>
@@ -109,7 +103,6 @@ const AdminVersion = () => {
             </CardContent>
           </Card>
         </div>
-      </main>
     </div>
   );
 };

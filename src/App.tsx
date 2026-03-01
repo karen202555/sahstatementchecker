@@ -4,7 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
-import FeedbackButton from "@/components/feedback-kit/FeedbackButton";
+import MainLayout from "@/components/MainLayout";
 import AppFooter from "@/components/AppFooter";
 import Index from "./pages/Index";
 import Results from "./pages/Results";
@@ -12,6 +12,7 @@ import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import SettingsPage from "./pages/Settings";
+import AccountPassword from "./pages/AccountPassword";
 import Install from "./pages/Install";
 import AdminFeedback from "./pages/AdminFeedback";
 import ProductStatus from "./pages/ProductStatus";
@@ -34,7 +35,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     );
   }
   if (!user) return <Navigate to="/auth" replace />;
-  return <>{children}</>;
+  return <MainLayout>{children}</MainLayout>;
 }
 
 function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
@@ -54,15 +55,14 @@ const AppRoutes = () => (
   <>
     <Routes>
       <Route path="/auth" element={<PublicOnlyRoute><Auth /></PublicOnlyRoute>} />
-      {/* Reset password must be public — user arrives from email link, not logged in */}
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+      <Route path="/account/password" element={<ProtectedRoute><AccountPassword /></ProtectedRoute>} />
       <Route path="/admin-feedback" element={<ProtectedRoute><AdminFeedback /></ProtectedRoute>} />
       <Route path="/product-status" element={<ProtectedRoute><ProductStatus /></ProtectedRoute>} />
       <Route path="/admin-features" element={<ProtectedRoute><AdminFeatures /></ProtectedRoute>} />
       <Route path="/admin-version" element={<ProtectedRoute><AdminVersion /></ProtectedRoute>} />
-      {/* Results is accessible without auth (shared links) */}
       <Route path="/results" element={<Results />} />
       <Route path="/install" element={<Install />} />
       <Route path="/about" element={<About />} />
@@ -72,7 +72,6 @@ const AppRoutes = () => (
       <Route path="*" element={<NotFound />} />
     </Routes>
     <AppFooter />
-    <FeedbackButton />
   </>
 );
 
