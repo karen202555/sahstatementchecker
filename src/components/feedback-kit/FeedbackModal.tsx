@@ -108,7 +108,7 @@ const FeedbackModal = ({ open, onOpenChange }: Props) => {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg flex flex-col max-h-[85vh]">
         <DialogHeader>
-          <DialogTitle>Send Feedback</DialogTitle>
+          <DialogTitle>Feedback</DialogTitle>
           <DialogDescription>
             Help us improve Statement Checker.
           </DialogDescription>
