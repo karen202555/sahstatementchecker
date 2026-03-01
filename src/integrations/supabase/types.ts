@@ -179,6 +179,60 @@ export type Database = {
         }
         Relationships: []
       }
+      feedback_entries: {
+        Row: {
+          app_key: string
+          app_version: string | null
+          category: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          message: string
+          priority: string | null
+          route: string | null
+          screen_title: string | null
+          screenshot_path: string | null
+          status: string
+          user_agent: string | null
+          user_email: string | null
+          user_id: string
+        }
+        Insert: {
+          app_key?: string
+          app_version?: string | null
+          category?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          message: string
+          priority?: string | null
+          route?: string | null
+          screen_title?: string | null
+          screenshot_path?: string | null
+          status?: string
+          user_agent?: string | null
+          user_email?: string | null
+          user_id: string
+        }
+        Update: {
+          app_key?: string
+          app_version?: string | null
+          category?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          message?: string
+          priority?: string | null
+          route?: string | null
+          screen_title?: string | null
+          screenshot_path?: string | null
+          status?: string
+          user_agent?: string | null
+          user_email?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string

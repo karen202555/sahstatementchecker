@@ -4,7 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
-import FeedbackButton from "@/components/FeedbackButton";
+import FeedbackButton from "@/components/feedback-kit/FeedbackButton";
 import AppFooter from "@/components/AppFooter";
 import Index from "./pages/Index";
 import Results from "./pages/Results";
@@ -20,6 +20,7 @@ import AdminVersion from "./pages/AdminVersion";
 import About from "./pages/About";
 import Beta from "./pages/Beta";
 import Features from "./pages/Features";
+import MyFeedback from "./pages/MyFeedback";
 
 const queryClient = new QueryClient();
 
@@ -67,6 +68,7 @@ const AppRoutes = () => (
       <Route path="/about" element={<About />} />
       <Route path="/beta" element={<Beta />} />
       <Route path="/features" element={<Features />} />
+      <Route path="/my-feedback" element={<ProtectedRoute><MyFeedback /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
     <AppFooter />
