@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import Header from "@/components/Header";
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
@@ -110,21 +110,16 @@ const AdminFeedback = () => {
 
   if (!user || isAdmin === false) {
     return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <main className="mx-auto max-w-[1100px] px-4 md:px-6 py-16 text-center">
-          <h1 className="text-2xl font-semibold text-foreground">Access Denied</h1>
-          <p className="text-sm text-muted-foreground mt-2">You do not have admin access.</p>
-          <Button variant="outline" className="mt-4 h-11 px-4 rounded-md" onClick={() => navigate("/")}>Go Home</Button>
-        </main>
+      <div className="mx-auto max-w-[1100px] px-4 md:px-6 py-16 text-center">
+        <h1 className="text-2xl font-semibold text-foreground">Access Denied</h1>
+        <p className="text-sm text-muted-foreground mt-2">You do not have admin access.</p>
+        <Button variant="outline" className="mt-4 h-11 px-4 rounded-md" onClick={() => navigate("/")}>Go Home</Button>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <main className="mx-auto max-w-[1100px] px-4 md:px-6 py-6 space-y-6">
+    <div className="mx-auto max-w-[1100px] px-4 md:px-6 py-6 space-y-6">
         <button onClick={() => navigate("/")} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
           <ArrowLeft className="h-4 w-4" /> Back
         </button>
@@ -290,7 +285,6 @@ const AdminFeedback = () => {
             )}
           </SheetContent>
         </Sheet>
-      </main>
     </div>
   );
 };

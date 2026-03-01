@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, CheckCircle2, Clock, Lightbulb, XCircle, AlertTriangle, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import Header from "@/components/Header";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
@@ -79,7 +79,6 @@ const ProductStatus = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        <Header />
         <div className="flex items-center justify-center py-20">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
         </div>
@@ -88,9 +87,7 @@ const ProductStatus = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <main className="mx-auto max-w-[1100px] px-4 md:px-6 py-6 space-y-6">
+    <div className="mx-auto max-w-[1100px] px-4 md:px-6 py-6 space-y-6">
         <button
           onClick={() => navigate("/")}
           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -179,7 +176,6 @@ const ProductStatus = () => {
             ))}
           </CardContent>
         </Card>
-      </main>
     </div>
   );
 };
