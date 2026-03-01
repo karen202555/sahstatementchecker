@@ -1,4 +1,4 @@
-import { FileSpreadsheet, LogOut, Settings, User, Info, MessageSquare } from "lucide-react";
+import { FileSpreadsheet, LogOut, Settings, User, Info, ClipboardList } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
@@ -27,7 +27,7 @@ const Header = () => {
               <span>{profile?.display_name || user.email}</span>
             </div>
             <Button variant="ghost" size="icon" onClick={() => navigate("/my-feedback")} title="My Feedback" className="h-9 w-9">
-              <MessageSquare className="h-4 w-4" />
+              <ClipboardList className="h-4 w-4" />
             </Button>
             <Button variant="ghost" size="icon" onClick={() => navigate("/product-status")} title="Product Status" className="h-9 w-9">
               <Info className="h-4 w-4" />
