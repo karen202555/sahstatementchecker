@@ -22,11 +22,11 @@ import { useAuth } from "@/hooks/use-auth";
 import { toast } from "@/hooks/use-toast";
 
 const CATEGORIES = [
-  "Something Broken",
-  "Hard To Use",
-  "Confusing",
-  "Idea or Suggestion",
   "General Feedback",
+  "Bug",
+  "Idea/Enhancement",
+  "Confusing",
+  "Something I love",
 ];
 const PRIORITIES = ["High", "Medium", "Low"];
 const APP_VERSION = "v0.1 Beta";
