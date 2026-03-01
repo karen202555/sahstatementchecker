@@ -60,6 +60,7 @@ const AppRoutes = () => (
       <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
       <Route path="/account/password" element={<ProtectedRoute><AccountPassword /></ProtectedRoute>} />
       <Route path="/admin-feedback" element={<ProtectedRoute><AdminFeedback /></ProtectedRoute>} />
+      <Route path="/admin/feedback" element={<ProtectedRoute><AdminFeedback /></ProtectedRoute>} />
       <Route path="/product-status" element={<ProtectedRoute><ProductStatus /></ProtectedRoute>} />
       <Route path="/admin-features" element={<ProtectedRoute><AdminFeatures /></ProtectedRoute>} />
       <Route path="/admin-version" element={<ProtectedRoute><AdminVersion /></ProtectedRoute>} />

@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronDown, ClipboardList, MessageSquare, Lock, Info, LogOut, UserPlus } from "lucide-react";
+import { ChevronDown, ClipboardList, MessageSquare, Lock, Info, LogOut, UserPlus, ShieldCheck } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -33,7 +34,19 @@ const UserMenu = () => {
   const navigate = useNavigate();
   const [aboutOpen, setAboutOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("admin_users" as any)
+      .select("user_id")
+      .eq("user_id", user.id)
+      .single()
+      .then(({ data, error }) => {
+        setIsAdmin(!error && !!data);
+      });
+  }, [user]);
   if (!user) return null;
 
   const displayName = profile?.display_name || user.email || "User";
@@ -91,9 +104,18 @@ const UserMenu = () => {
             </DropdownMenuItem>
           )}
 
-          {(appMetadata.feedbackEnabled || appMetadata.profilesEnabled) && (
+          {(appMetadata.feedbackEnabled || appMetadata.profilesEnabled || isAdmin) && (
             <DropdownMenuSeparator />
           )}
+
+          {isAdmin && (
+            <DropdownMenuItem role="menuitem" onClick={() => navigate("/admin/feedback")}>
+              <ShieldCheck className="mr-2 h-4 w-4" />
+              Admin: All Feedback
+            </DropdownMenuItem>
+          )}
+
+          {isAdmin && <DropdownMenuSeparator />}
 
           {/* C) Account */}
           <DropdownMenuItem role="menuitem" onClick={() => navigate("/account/password")}>
