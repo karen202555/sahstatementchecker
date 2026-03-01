@@ -1,6 +1,7 @@
 import { FileSpreadsheet } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import UserMenu from "@/components/user-menu/UserMenu";
+import FeedbackButton from "@/components/feedback-kit/FeedbackButton";
 
 interface Props {
   children: React.ReactNode;
@@ -27,6 +28,7 @@ const MainLayout = ({ children }: Props) => {
         </div>
       </header>
       <main className="flex-1">{children}</main>
+      <FeedbackButton />
     </div>
   );
 };
