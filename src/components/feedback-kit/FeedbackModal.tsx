@@ -8,14 +8,26 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "@/hooks/use-toast";
 
-const CATEGORIES = ["Bug", "Usability", "Confusing", "Idea", "General"];
+const CATEGORIES = [
+  "Something Broken",
+  "Hard To Use",
+  "Confusing",
+  "Idea or Suggestion",
+  "General Feedback",
+];
 const PRIORITIES = ["High", "Medium", "Low"];
 const APP_VERSION = "v0.1 Beta";
 
@@ -30,14 +42,14 @@ const FeedbackModal = ({ open, onOpenChange }: Props) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [message, setMessage] = useState("");
-  const [category, setCategory] = useState("General");
+  const [category, setCategory] = useState("General Feedback");
   const [priority, setPriority] = useState("Medium");
   const [file, setFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const reset = () => {
     setMessage("");
-    setCategory("General");
+    setCategory("General Feedback");
     setPriority("Medium");
     setFile(null);
   };
@@ -59,7 +71,6 @@ const FeedbackModal = ({ open, onOpenChange }: Props) => {
         if (pastedFile) {
           setFile(pastedFile);
         }
-        // Don't preventDefault — allow text paste to proceed naturally
         break;
       }
     }
@@ -70,7 +81,6 @@ const FeedbackModal = ({ open, onOpenChange }: Props) => {
     setSubmitting(true);
 
     try {
-      // 1. Insert row
       const { data: row, error: insertErr } = await supabase
         .from("feedback_entries" as any)
         .insert({
@@ -92,15 +102,14 @@ const FeedbackModal = ({ open, onOpenChange }: Props) => {
       if (insertErr) throw insertErr;
       const entryId = (row as any).id;
 
-      // 2. Upload attachment if present
       if (file) {
-        const path = `${user.id}/${entryId}/${Date.now()}-${file.name}`;
+        const ext = file.name.split(".").pop() ?? "png";
+        const path = `${user.id}/${entryId}.${ext}`;
         const { error: uploadErr } = await supabase.storage
           .from("feedback-uploads")
           .upload(path, file);
 
         if (!uploadErr) {
-          // 3. Update screenshot_path
           await supabase
             .from("feedback_entries" as any)
             .update({ screenshot_path: path } as any)
@@ -123,93 +132,94 @@ const FeedbackModal = ({ open, onOpenChange }: Props) => {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg flex flex-col max-h-[85vh]" onPaste={handlePaste}>
         <DialogHeader>
-          <DialogTitle>Feedback</DialogTitle>
+          <DialogTitle>Provide Feedback</DialogTitle>
           <DialogDescription>
             Help us improve Statement Checker.
           </DialogDescription>
         </DialogHeader>
 
-        {/* Message area */}
-        <div className="flex-1 min-h-0 py-2">
+        {/* Category + Priority selects */}
+        <div className="grid grid-cols-2 gap-3 pt-1">
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground">Category</label>
+            <Select value={category} onValueChange={setCategory}>
+              <SelectTrigger className="h-9 text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {CATEGORIES.map((c) => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground">Priority</label>
+            <Select value={priority} onValueChange={setPriority}>
+              <SelectTrigger className="h-9 text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PRIORITIES.map((p) => (
+                  <SelectItem key={p} value={p}>{p}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Message */}
+        <div className="flex-1 min-h-0 py-1">
           <Textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             placeholder="What happened? What did you expect?"
-            className="min-h-[180px] resize-none"
+            className="min-h-[160px] resize-none"
             maxLength={5000}
           />
         </div>
 
-        {/* Sticky bottom details bar */}
-        <div className="border-t pt-3 space-y-3">
-          {/* Category chips */}
-          <div className="flex flex-wrap gap-1.5">
-            {CATEGORIES.map((c) => (
-              <Badge
-                key={c}
-                variant={category === c ? "default" : "outline"}
-                className="cursor-pointer text-xs"
-                onClick={() => setCategory(c)}
-              >
-                {c}
-              </Badge>
-            ))}
-          </div>
-
-          {/* Priority chips + attach + send */}
-          <div className="flex items-center gap-2 flex-wrap">
-            {PRIORITIES.map((p) => (
-              <Badge
-                key={p}
-                variant={priority === p ? "secondary" : "outline"}
-                className="cursor-pointer text-xs"
-                onClick={() => setPriority(p)}
-              >
-                {p}
-              </Badge>
-            ))}
-
-            <div className="flex-1" />
-
-            {/* Attach */}
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 relative"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <Paperclip className="h-4 w-4" />
-              {file && (
-                <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-primary" />
-              )}
-            </Button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              className="hidden"
-              accept=".jpg,.jpeg,.png,.webp"
-              onChange={handleFile}
-            />
-
+        {/* Bottom bar: attach + send */}
+        <div className="border-t pt-3 flex items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="gap-1.5 relative"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <Paperclip className="h-3.5 w-3.5" />
+            Attach screenshot
             {file && (
-              <span className="text-xs text-muted-foreground flex items-center gap-1 max-w-[120px] truncate">
-                {file.name}
-                <X className="h-3 w-3 cursor-pointer shrink-0" onClick={() => setFile(null)} />
-              </span>
+              <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-primary" />
             )}
+          </Button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            className="hidden"
+            accept=".jpg,.jpeg,.png,.webp"
+            onChange={handleFile}
+          />
 
-            {/* Send */}
-            <Button
-              size="sm"
-              disabled={submitting || !message.trim()}
-              onClick={handleSubmit}
-              className="gap-1.5"
-            >
-              <Send className="h-3.5 w-3.5" />
-              {submitting ? "Sending…" : "Send"}
-            </Button>
-          </div>
+          {file && (
+            <span className="text-xs text-muted-foreground flex items-center gap-1 max-w-[140px] truncate">
+              {file.name}
+              <X className="h-3 w-3 cursor-pointer shrink-0" onClick={() => setFile(null)} />
+            </span>
+          )}
+
+          <div className="flex-1" />
+
+          <Button
+            size="sm"
+            disabled={submitting || !message.trim()}
+            onClick={handleSubmit}
+            className="gap-1.5"
+          >
+            <Send className="h-3.5 w-3.5" />
+            {submitting ? "Sending…" : "Send"}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

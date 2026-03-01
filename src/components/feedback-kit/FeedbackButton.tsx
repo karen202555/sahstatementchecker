@@ -18,7 +18,7 @@ const FeedbackButton = () => {
         size="sm"
       >
         <MessageSquare className="h-4 w-4" />
-        Feedback
+        Provide Feedback
       </Button>
       <FeedbackModal open={open} onOpenChange={setOpen} />
     </>
