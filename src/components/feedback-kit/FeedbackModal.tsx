@@ -50,6 +50,21 @@ const FeedbackModal = ({ open, onOpenChange }: Props) => {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (const item of Array.from(items)) {
+      if (item.type.startsWith("image/")) {
+        const pastedFile = item.getAsFile();
+        if (pastedFile) {
+          setFile(pastedFile);
+        }
+        // Don't preventDefault — allow text paste to proceed naturally
+        break;
+      }
+    }
+  };
+
   const handleSubmit = async () => {
     if (!message.trim() || !user) return;
     setSubmitting(true);
@@ -106,7 +121,7 @@ const FeedbackModal = ({ open, onOpenChange }: Props) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg flex flex-col max-h-[85vh]">
+      <DialogContent className="sm:max-w-lg flex flex-col max-h-[85vh]" onPaste={handlePaste}>
         <DialogHeader>
           <DialogTitle>Feedback</DialogTitle>
           <DialogDescription>
