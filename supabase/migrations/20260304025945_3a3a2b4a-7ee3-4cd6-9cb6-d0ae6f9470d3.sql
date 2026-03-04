@@ -1,0 +1,1 @@
+ALTER TABLE public.feedback_entries ADD COLUMN IF NOT EXISTS admin_meta jsonb DEFAULT '{}' ::jsonb;
