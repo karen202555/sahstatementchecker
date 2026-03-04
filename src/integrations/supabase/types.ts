@@ -181,6 +181,7 @@ export type Database = {
       }
       feedback_entries: {
         Row: {
+          admin_meta: Json | null
           app_key: string
           app_version: string | null
           category: string | null
@@ -198,6 +199,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          admin_meta?: Json | null
           app_key?: string
           app_version?: string | null
           category?: string | null
@@ -215,6 +217,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          admin_meta?: Json | null
           app_key?: string
           app_version?: string | null
           category?: string | null
