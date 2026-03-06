@@ -1,17 +1,17 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Table as TableIcon, CalendarDays, Download, Printer, PieChart, ShieldAlert, Share2, FileDown, Eraser, AlertTriangle, Copy, Mail, FileText } from "lucide-react";
+import { ArrowLeft, Table as TableIcon, CalendarDays, Download, Printer, PieChart, ShieldAlert, Share2, FileDown, Eraser, AlertTriangle, Copy, Mail, FileText, MoreVertical } from "lucide-react";
 
 import TransactionsTable from "@/components/TransactionsTable";
 import TransactionCalendar from "@/components/TransactionCalendar";
 import SpendingSummary from "@/components/SpendingSummary";
 import OverchargeAlerts from "@/components/OverchargeAlerts";
-import IssueSummary from "@/components/IssueSummary";
 import BetaFeedback from "@/components/BetaFeedback";
 import SAHStatement from "@/components/SAHStatement";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
 import { getTransactions, updateTransactionStatus, type Transaction } from "@/lib/transactions";
@@ -115,80 +115,67 @@ const Results = () => {
     <div className="min-h-screen bg-background">
       <main className="mx-auto max-w-[1100px] px-4 md:px-6 py-6">
         {/* Top bar */}
-        <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 no-print">
-          <Button variant="ghost" onClick={() => navigate("/")} className="gap-2 h-11 px-4 rounded-md self-start">
+        <div className="mb-6 flex items-center justify-between no-print">
+          <Button variant="ghost" onClick={() => navigate("/")} className="gap-2 h-11 px-4 rounded-md">
             <ArrowLeft className="h-4 w-4" />
             Back
           </Button>
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm text-muted-foreground mr-1">
-              {transactions.length} transaction{transactions.length !== 1 ? "s" : ""}
-            </span>
-            {transactions.length > 0 && (
-              <>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="gap-2 h-11 px-4 rounded-md"
-                  onClick={() => {
-                    navigator.clipboard.writeText(window.location.href);
-                    toast({ title: "Link copied!", description: "Share this link with family or advocates." });
-                  }}
-                >
-                  <Share2 className="h-4 w-4" />
+          {transactions.length > 0 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-11 w-11 rounded-md">
+                  <MoreVertical className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onClick={() => {
+                  navigator.clipboard.writeText(window.location.href);
+                  toast({ title: "Link copied!", description: "Share this link with family or advocates." });
+                }}>
+                  <Share2 className="h-4 w-4 mr-2" />
                   Share
-                </Button>
-                <Button variant="outline" size="sm" className="gap-2 h-11 px-4 rounded-md" onClick={() => window.print()}>
-                  <Printer className="h-4 w-4" />
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => window.print()}>
+                  <Printer className="h-4 w-4 mr-2" />
                   Print
-                </Button>
-                <Button variant="outline" size="sm" className="gap-2 h-11 px-4 rounded-md" onClick={() => exportToExcel(transactions)}>
-                  <Download className="h-4 w-4" />
-                  Excel
-                </Button>
-                <Button variant="outline" size="sm" className="gap-2 h-11 px-4 rounded-md" onClick={() => generatePdfReport(transactions, decisions)}>
-                  <FileDown className="h-4 w-4" />
-                  PDF Report
-                </Button>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => exportToExcel(transactions)}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Export to Excel
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => generatePdfReport(transactions, decisions)}>
+                  <FileDown className="h-4 w-4 mr-2" />
+                  Download PDF Report
+                </DropdownMenuItem>
                 {disputedTxs.length > 0 && (
                   <>
-                    <Button
-                      variant="default"
-                      size="sm"
-                      className="gap-2 h-11 px-4 rounded-md"
-                      onClick={() => setShowDisputeDialog(true)}
-                    >
-                      <AlertTriangle className="h-4 w-4" />
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => setShowDisputeDialog(true)}>
+                      <AlertTriangle className="h-4 w-4 mr-2" />
                       Export Disputes ({disputedTxs.length})
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="gap-2 h-11 px-4 rounded-md"
-                      onClick={() => setShowEmailDialog(true)}
-                    >
-                      <Mail className="h-4 w-4" />
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setShowEmailDialog(true)}>
+                      <Mail className="h-4 w-4 mr-2" />
                       Email Provider
-                    </Button>
+                    </DropdownMenuItem>
                   </>
                 )}
                 {isAuthenticated && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="gap-2 h-11 px-4 rounded-md"
-                    onClick={() => {
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => {
                       clearMemory();
                       toast({ title: "Memory cleared", description: "Your saved preferences for recurring charges have been reset." });
-                    }}
-                  >
-                    <Eraser className="h-4 w-4" />
-                    Clear Memory
-                  </Button>
+                    }}>
+                      <Eraser className="h-4 w-4 mr-2" />
+                      Clear Memory
+                    </DropdownMenuItem>
+                  </>
                 )}
-              </>
-            )}
-          </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
 
         {loading ? (
@@ -197,24 +184,17 @@ const Results = () => {
           </div>
         ) : (
           <div className="space-y-6">
-            {/* Summary strip */}
-            {transactions.length > 0 && (
-              <div className="no-print">
-                <IssueSummary transactions={transactions} />
-              </div>
-            )}
-
             <Card>
               <CardContent className="p-5">
                 <Tabs defaultValue="calendar">
                   <TabsList className="mb-4 no-print h-10 gap-0.5 bg-muted p-0.5 rounded-md">
-                    <TabsTrigger value="table" className="gap-2 text-sm h-9 px-3 rounded-md data-[state=active]:bg-card data-[state=active]:shadow-sm">
-                      <TableIcon className="h-4 w-4" />
-                      Reconcile
-                    </TabsTrigger>
                     <TabsTrigger value="calendar" className="gap-2 text-sm h-9 px-3 rounded-md data-[state=active]:bg-card data-[state=active]:shadow-sm">
                       <CalendarDays className="h-4 w-4" />
                       Calendar
+                    </TabsTrigger>
+                    <TabsTrigger value="table" className="gap-2 text-sm h-9 px-3 rounded-md data-[state=active]:bg-card data-[state=active]:shadow-sm">
+                      <TableIcon className="h-4 w-4" />
+                      Reconcile
                     </TabsTrigger>
                     <TabsTrigger value="summary" className="gap-2 text-sm h-9 px-3 rounded-md data-[state=active]:bg-card data-[state=active]:shadow-sm">
                       <PieChart className="h-4 w-4" />
